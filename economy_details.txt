@@ -11,10 +11,10 @@ This document outlines how the in-game economy functions, including resource gen
 ## 2. Income Generation (Killing Enemies)
 You earn money by successfully defeating waves of enemies. The bounty varies by enemy type:
 
-*   **Grunt (Green):** $10 per kill
-*   **Fast (Cyan):** $15 per kill
-*   **Tank (Orange):** $25 per kill
-*   **Boss (Pink):** $100 per kill
+*   **Hlovah (Green):** $10 per kill
+*   **Spreek (Cyan):** $15 per kill
+*   **Grlumb (Orange):** $25 per kill
+*   **Prabowo (Pink):** $100 per kill
 
 ---
 
