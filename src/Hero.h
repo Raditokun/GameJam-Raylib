@@ -19,10 +19,11 @@ public:
     // ── Ultimate Ability ─────────────────────────────────
     float ultCooldownMax;   // total cooldown in seconds (e.g. 45s)
     float ultCooldownTimer; // counts DOWN to 0; <= 0 means ready
-    float ultDuration;      // how long the ult effect lasts
-    float ultActiveTimer;   // counts DOWN while ult is firing; <= 0 means inactive
-    float ultDamage;        // damage dealt by the ultimate
-    float ultRadius;        // area-of-effect radius
+    float ultDuration;      // how long the laser visual stays on screen
+    float ultActiveTimer;   // counts DOWN while laser visual is showing
+    float ultDamage;        // one-shot damage dealt on fire
+    float ultRadius;        // area-of-effect radius (unused now, kept for compat)
+    bool  isUltFiring;      // true on the ONE frame damage is applied
 
     // ── Visual ────────────────────────────────────────────
     float pulseTimer;       // internal animation timer
@@ -35,8 +36,8 @@ public:
 
     // ── Ultimate ──────────────────────────────────────────
     bool  IsUltReady() const;
-    bool  IsUltActive() const;
-    void  ActivateUlt();            // starts the ult (called on player input)
+    bool  IsUltActive() const;      // true while laser visual is showing
+    void  FireUltimate();           // one-shot trigger: sets isUltFiring, resets cooldown
     float GetUltCooldownPercent() const; // 0.0 = ready, 1.0 = full cooldown
 
     // ── Damage ────────────────────────────────────────────

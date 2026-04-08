@@ -7,15 +7,16 @@ Hero::Hero()
     : position({0,0}), radius(20.0f),
       maxHP(STARTING_HEALTH), currentHP(STARTING_HEALTH),
       ultCooldownMax(45.0f), ultCooldownTimer(45.0f),
-      ultDuration(2.0f), ultActiveTimer(0),
-      ultDamage(500.0f), ultRadius(250.0f),
-      pulseTimer(0) {}
+      ultDuration(0.5f), ultActiveTimer(0),
+      ultDamage(9999.0f), ultRadius(250.0f),
+      isUltFiring(false), pulseTimer(0) {}
 
 void Hero::Init(Vector2 basePos) {
     position = basePos;
     currentHP = maxHP;
-    ultCooldownTimer = ultCooldownMax; // start on cooldown
+    ultCooldownTimer = ultCooldownMax;
     ultActiveTimer = 0;
+    isUltFiring = false;
     pulseTimer = 0;
 }
 
@@ -26,7 +27,6 @@ void Hero::Update(float dt) {
         ultActiveTimer -= dt;
         if (ultActiveTimer <= 0) {
             ultActiveTimer = 0;
-            ultCooldownTimer = ultCooldownMax;
         }
     } else if (ultCooldownTimer > 0) {
         ultCooldownTimer -= dt;
@@ -63,11 +63,9 @@ void Hero::Draw() const {
         DrawText("[Q] ULT READY", (int)(position.x-42), (int)(position.y+38), 10,
                  Fade(COLOR_CURRENCY, pulse));
     } else if (IsUltActive()) {
-        // Active ult visual — expanding ring
-        float progress = 1.0f - (ultActiveTimer / ultDuration);
-        DrawCircleLines((int)position.x, (int)position.y,
-                        ultRadius * progress, Fade(COLOR_CURRENCY, 0.8f - 0.6f*progress));
-        DrawCircleV(position, 20 + ultRadius*progress*0.3f, Fade(COLOR_CURRENCY, 0.1f));
+        // Active — pulsing glow
+        float flash = 0.5f + 0.5f * sinf(pulseTimer * 12.0f);
+        DrawCircleV(position, 30, Fade(COLOR_CURRENCY, 0.3f * flash));
     } else {
         // Cooldown display
         float pct = GetUltCooldownPercent();
@@ -85,9 +83,11 @@ bool Hero::IsUltActive() const {
     return ultActiveTimer > 0;
 }
 
-void Hero::ActivateUlt() {
+void Hero::FireUltimate() {
     if (!IsUltReady()) return;
+    isUltFiring = true;
     ultActiveTimer = ultDuration;
+    ultCooldownTimer = ultCooldownMax;
 }
 
 float Hero::GetUltCooldownPercent() const {

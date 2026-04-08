@@ -29,6 +29,10 @@ public:
     std::vector<Vector2> pathPoints;
     bool pathCells[GRID_ROWS][GRID_COLS];
 
+    // ── Screen Shake ─────────────────────────────────────
+    Camera2D camera;
+    float screenShakeTimer;
+
     Game();
     void Init();
     void Update(float dt);
@@ -46,7 +50,7 @@ private:
     void UpdateProjectiles(float dt);
     void CheckEnemyReachedBase();
     void CleanupDead();
-    void CheckWaveEndShop();       // after a wave clears, check if shop should open
+    void CheckWaveEndShop();
 
     // ── Shop ─────────────────────────────────────────────
     void UpdateShop();
@@ -55,9 +59,9 @@ private:
     // ── Rendering ────────────────────────────────────────
     void DrawGrid() const;
     void DrawPath() const;
+    void DrawUltLaser() const;      // path-tracing laser visual
     void DrawUI() const;
     void DrawGameOver() const;
     void DrawVictory() const;
-    // DrawBase() and DrawPortal() removed — Hero::Draw() replaces DrawBase()
     void DrawPortal() const;
 };

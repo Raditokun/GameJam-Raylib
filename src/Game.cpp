@@ -3,10 +3,11 @@
 #include <cmath>
 #include <cstring>
 #include <algorithm>
+#include <cstdlib>
 
 Game::Game()
     : state(GameState::DRAFTING), currency(STARTING_CURRENCY),
-      playerHealth(hero.currentHP)
+      playerHealth(hero.currentHP), camera({0}), screenShakeTimer(0)
 {
     memset(pathCells, false, sizeof(pathCells));
 }
@@ -33,6 +34,13 @@ void Game::Init() {
     deck.InitPool();
     waves.Init();
     hero.Init(pathPoints.back());
+
+    // Camera init
+    camera.offset = {0, 0};
+    camera.target = {0, 0};
+    camera.rotation = 0;
+    camera.zoom = 1.0f;
+    screenShakeTimer = 0;
 
     state = GameState::DRAFTING;
     currency = STARTING_CURRENCY;
@@ -73,19 +81,26 @@ void Game::Update(float dt) {
     CheckEnemyReachedBase();
     CleanupDead();
 
-    // ── Hero Ultimate damage ─────────────────────────────
-    if (hero.IsUltActive()) {
+    // ── Hero Ultimate: one-frame massive damage ──────────
+    if (hero.isUltFiring) {
         for (auto& e : enemies) {
             if (!e.alive) continue;
-            float dx = e.position.x - hero.position.x;
-            float dy = e.position.y - hero.position.y;
-            float dist = sqrtf(dx*dx + dy*dy);
-            if (dist < hero.ultRadius) {
-                float dmg = hero.ultDamage * dt; // damage per second while active
-                e.hp -= dmg;
-                if (e.hp <= 0) { e.alive = false; currency += e.reward; }
-            }
+            e.hp -= hero.ultDamage;
+            if (e.hp <= 0) { e.alive = false; currency += e.reward; }
         }
+        hero.isUltFiring = false; // damage only on first frame
+    }
+
+    // ── Screen shake timer ───────────────────────────────
+    if (screenShakeTimer > 0) {
+        screenShakeTimer -= dt;
+        float intensity = screenShakeTimer * 20.0f; // decays from 10 to 0
+        if (intensity > 10.0f) intensity = 10.0f;
+        camera.offset.x = (float)((rand() % 200 - 100) / 100.0f) * intensity;
+        camera.offset.y = (float)((rand() % 200 - 100) / 100.0f) * intensity;
+    } else {
+        camera.offset.x = 0;
+        camera.offset.y = 0;
     }
 
     // ── Wave-end shop check ──────────────────────────────
@@ -98,7 +113,6 @@ void Game::Update(float dt) {
 void Game::UpdateDrafting() {
     deck.UpdateDrafting();
 
-    // Check START button click
     if (deck.IsDraftReady() && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         float btnW=220, btnH=50, btnX=(SCREEN_WIDTH-btnW)/2, btnY=SCREEN_HEIGHT-100;
         Vector2 mp = GetMousePosition();
@@ -110,10 +124,8 @@ void Game::UpdateDrafting() {
 }
 
 void Game::CheckWaveEndShop() {
-    // Trigger shop when a wave just completed and wave index qualifies
     if (!waves.waveActive && waves.currentWave >= 0) {
         if (ShopManager::ShouldOpenShop(waves.currentWave) && !shop.isOpen) {
-            // Only trigger once per qualifying wave — we check enemies are cleared
             bool cleared = true;
             for (auto& e : enemies) if (e.alive) { cleared = false; break; }
             if (cleared) {
@@ -126,7 +138,6 @@ void Game::CheckWaveEndShop() {
 
 void Game::UpdateShop() {
     if (shop.UpdateShop(currency, deck)) {
-        // Start next wave immediately to prevent re-triggering the shop
         if (waves.currentWave < (int)waves.waves.size() - 1)
             waves.StartNextWave();
         state = GameState::PLAYING;
@@ -140,8 +151,9 @@ void Game::HandleInput() {
         waves.StartNextWave();
 
     // Hero Ultimate (Q key)
-    if (IsKeyPressed(KEY_Q)) {
-        hero.ActivateUlt();
+    if (IsKeyPressed(KEY_Q) && hero.IsUltReady()) {
+        hero.FireUltimate();
+        screenShakeTimer = 0.5f; // trigger screen shake
     }
 
     // Place tower
@@ -217,12 +229,44 @@ void Game::CleanupDead() {
     projectiles.erase(std::remove_if(projectiles.begin(),projectiles.end(),[](const Projectile& p){return !p.active;}),projectiles.end());
 }
 
+// ─── Ultimate Laser Visual ──────────────────────────────
+
+void Game::DrawUltLaser() const {
+    if (hero.ultActiveTimer <= 0) return;
+
+    float alpha = hero.ultActiveTimer / hero.ultDuration; // fades out over duration
+    float t = (float)GetTime();
+
+    // Thick glowing laser segments tracing the entire path
+    for (int i = 0; i < (int)pathPoints.size()-1; i++) {
+        // Core beam (white-hot center)
+        DrawLineEx(pathPoints[i], pathPoints[i+1], 8.0f, Fade(WHITE, 0.9f * alpha));
+        // Inner glow (gold)
+        DrawLineEx(pathPoints[i], pathPoints[i+1], 16.0f, Fade(COLOR_CURRENCY, 0.6f * alpha));
+        // Outer glow (pulsing)
+        float pulse = 20.0f + 6.0f * sinf(t * 15.0f + i * 2.0f);
+        DrawLineEx(pathPoints[i], pathPoints[i+1], pulse, Fade(COLOR_CURRENCY, 0.15f * alpha));
+        // Halo
+        DrawLineEx(pathPoints[i], pathPoints[i+1], pulse + 12.0f, Fade(COLOR_CURRENCY, 0.05f * alpha));
+    }
+
+    // Bright nodes at each waypoint
+    for (auto& pt : pathPoints) {
+        float r = 10.0f + 4.0f * sinf(t * 12.0f);
+        DrawCircleV(pt, r, Fade(WHITE, 0.8f * alpha));
+        DrawCircleV(pt, r + 6, Fade(COLOR_CURRENCY, 0.2f * alpha));
+    }
+}
+
 // ─── Draw ───────────────────────────────────────────────
 
 void Game::Draw() const {
     ClearBackground(COLOR_BG);
 
     if (state == GameState::DRAFTING) { DrawDrafting(); return; }
+
+    // ── Begin Camera2D (everything that shakes) ──────────
+    BeginMode2D(camera);
 
     // Stars
     for (int i = 0; i < 80; i++) {
@@ -256,6 +300,9 @@ void Game::Draw() const {
 
     for (auto& e : enemies) e.Draw();
     for (auto& p : projectiles) p.Draw();
+
+    // Ultimate laser drawn on top of path/enemies
+    DrawUltLaser();
 
     // ── Hover Tooltip ────────────────────────────────────
     {
@@ -297,6 +344,10 @@ void Game::Draw() const {
         }
     }
 
+    EndMode2D();
+    // ── End Camera2D ─────────────────────────────────────
+
+    // UI is drawn OUTSIDE Camera2D so it stays static during shake
     DrawRectangle(0, UI_PANEL_Y, SCREEN_WIDTH, UI_PANEL_HEIGHT, COLOR_UI_PANEL);
     DrawLineEx({0,(float)UI_PANEL_Y},{(float)SCREEN_WIDTH,(float)UI_PANEL_Y}, 2, COLOR_UI_BORDER);
     DrawUI();
@@ -312,7 +363,6 @@ void Game::DrawDrafting() const {
     ClearBackground(COLOR_DRAFT_BG);
     deck.DrawDrafting();
 
-    // Draw path preview faintly at bottom
     for (int i = 0; i < (int)pathPoints.size()-1; i++)
         DrawLineEx(pathPoints[i], pathPoints[i+1], 2, Fade(COLOR_PATH_BORDER, 0.15f));
 }
@@ -357,7 +407,6 @@ void Game::DrawUI() const {
                  Fade(COLOR_CURRENCY, 0.9f));
     } else {
         float pct = hero.GetUltCooldownPercent();
-        // Cooldown bar
         DrawRectangle(SCREEN_WIDTH-250, UI_PANEL_Y+78, 120, 8, CLITERAL(Color){40,40,40,200});
         DrawRectangle(SCREEN_WIDTH-250, UI_PANEL_Y+78, (int)(120*(1.0f-pct)), 8,
                       Fade(COLOR_CURRENCY, 0.5f));
