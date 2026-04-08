@@ -4,7 +4,10 @@
 #include <cstring>
 #include <algorithm>
 
-Game::Game() : state(GameState::DRAFTING), playerHealth(STARTING_HEALTH), currency(STARTING_CURRENCY) {
+Game::Game()
+    : state(GameState::DRAFTING), currency(STARTING_CURRENCY),
+      playerHealth(hero.currentHP)
+{
     memset(pathCells, false, sizeof(pathCells));
 }
 
@@ -29,8 +32,9 @@ void Game::Init() {
     InitGrid();
     deck.InitPool();
     waves.Init();
+    hero.Init(pathPoints.back());
+
     state = GameState::DRAFTING;
-    playerHealth = STARTING_HEALTH;
     currency = STARTING_CURRENCY;
     enemies.clear();
     projectiles.clear();
@@ -52,11 +56,13 @@ void Game::Update(float dt) {
         return;
     }
     if (state == GameState::DRAFTING) { UpdateDrafting(); return; }
+    if (state == GameState::SHOP)    { UpdateShop(); return; }
 
     // PLAYING state
     deck.UpdatePlaying();
     HandleInput();
     waves.Update(dt, enemies, pathPoints);
+    hero.Update(dt);
 
     for (int r=0;r<GRID_ROWS;r++)
         for (int c=0;c<GRID_COLS;c++)
@@ -66,6 +72,24 @@ void Game::Update(float dt) {
     UpdateProjectiles(dt);
     CheckEnemyReachedBase();
     CleanupDead();
+
+    // ── Hero Ultimate damage ─────────────────────────────
+    if (hero.IsUltActive()) {
+        for (auto& e : enemies) {
+            if (!e.alive) continue;
+            float dx = e.position.x - hero.position.x;
+            float dy = e.position.y - hero.position.y;
+            float dist = sqrtf(dx*dx + dy*dy);
+            if (dist < hero.ultRadius) {
+                float dmg = hero.ultDamage * dt; // damage per second while active
+                e.hp -= dmg;
+                if (e.hp <= 0) { e.alive = false; currency += e.reward; }
+            }
+        }
+    }
+
+    // ── Wave-end shop check ──────────────────────────────
+    CheckWaveEndShop();
 
     if (waves.AllWavesComplete() && waves.IsWaveCleared(enemies))
         state = GameState::VICTORY;
@@ -85,11 +109,40 @@ void Game::UpdateDrafting() {
     }
 }
 
+void Game::CheckWaveEndShop() {
+    // Trigger shop when a wave just completed and wave index qualifies
+    if (!waves.waveActive && waves.currentWave >= 0) {
+        if (ShopManager::ShouldOpenShop(waves.currentWave) && !shop.isOpen) {
+            // Only trigger once per qualifying wave — we check enemies are cleared
+            bool cleared = true;
+            for (auto& e : enemies) if (e.alive) { cleared = false; break; }
+            if (cleared) {
+                shop.GenerateStock();
+                state = GameState::SHOP;
+            }
+        }
+    }
+}
+
+void Game::UpdateShop() {
+    if (shop.UpdateShop(currency, deck)) {
+        // Start next wave immediately to prevent re-triggering the shop
+        if (waves.currentWave < (int)waves.waves.size() - 1)
+            waves.StartNextWave();
+        state = GameState::PLAYING;
+    }
+}
+
 // ─── Input (PLAYING) ────────────────────────────────────
 
 void Game::HandleInput() {
     if (IsKeyPressed(KEY_SPACE) && !waves.waveActive && waves.currentWave < (int)waves.waves.size()-1)
         waves.StartNextWave();
+
+    // Hero Ultimate (Q key)
+    if (IsKeyPressed(KEY_Q)) {
+        hero.ActivateUlt();
+    }
 
     // Place tower
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && deck.HasSelection()) {
@@ -152,8 +205,9 @@ void Game::UpdateProjectiles(float dt) {
 void Game::CheckEnemyReachedBase() {
     for (auto& e : enemies) {
         if (e.alive && e.ReachedEnd(pathPoints)) {
-            playerHealth--; e.alive = false;
-            if (playerHealth <= 0) state = GameState::GAME_OVER;
+            hero.TakeDamage(1);
+            e.alive = false;
+            if (!hero.IsAlive()) state = GameState::GAME_OVER;
         }
     }
 }
@@ -176,7 +230,10 @@ void Game::Draw() const {
         DrawPixel(sx, sy, Fade(WHITE, 0.2f+0.15f*sinf((float)GetTime()*0.5f+i*0.7f)));
     }
 
-    DrawPath(); DrawGrid(); DrawPortal(); DrawBase();
+    DrawPath(); DrawGrid(); DrawPortal();
+
+    // Hero replaces old DrawBase()
+    hero.Draw();
 
     for (int r=0;r<GRID_ROWS;r++) for(int c=0;c<GRID_COLS;c++) grid[r][c].DrawAll();
 
@@ -200,7 +257,7 @@ void Game::Draw() const {
     for (auto& e : enemies) e.Draw();
     for (auto& p : projectiles) p.Draw();
 
-    // ── Hover Tooltip (draw above grid, below UI) ───────
+    // ── Hover Tooltip ────────────────────────────────────
     {
         Vector2 mp = GetMousePosition();
         if (mp.y < UI_PANEL_Y && mp.y >= 0) {
@@ -244,6 +301,9 @@ void Game::Draw() const {
     DrawLineEx({0,(float)UI_PANEL_Y},{(float)SCREEN_WIDTH,(float)UI_PANEL_Y}, 2, COLOR_UI_BORDER);
     DrawUI();
 
+    // Shop overlay (drawn on top of everything)
+    if (state == GameState::SHOP) DrawShop();
+
     if (state == GameState::GAME_OVER) DrawGameOver();
     if (state == GameState::VICTORY)   DrawVictory();
 }
@@ -255,6 +315,10 @@ void Game::DrawDrafting() const {
     // Draw path preview faintly at bottom
     for (int i = 0; i < (int)pathPoints.size()-1; i++)
         DrawLineEx(pathPoints[i], pathPoints[i+1], 2, Fade(COLOR_PATH_BORDER, 0.15f));
+}
+
+void Game::DrawShop() const {
+    shop.DrawShop(currency, deck);
 }
 
 void Game::DrawGrid() const {
@@ -273,26 +337,36 @@ void Game::DrawPath() const {
 }
 
 void Game::DrawUI() const {
-    char hbuf[32]; snprintf(hbuf,sizeof(hbuf),"HP: %d",playerHealth);
+    char hbuf[32]; snprintf(hbuf,sizeof(hbuf),"HP: %d/%d", hero.currentHP, hero.maxHP);
     DrawText(hbuf,20,UI_PANEL_Y+15,22,COLOR_HEALTH_BAR);
-    float hpR=(float)playerHealth/STARTING_HEALTH;
+    float hpR=(float)hero.currentHP/hero.maxHP;
     DrawRectangle(20,UI_PANEL_Y+45,120,8,CLITERAL(Color){40,40,40,200});
     DrawRectangle(20,UI_PANEL_Y+45,(int)(120*hpR),8,COLOR_HEALTH_BAR);
     char cbuf[32]; snprintf(cbuf,sizeof(cbuf),"$ %d",currency);
     DrawText(cbuf,20,UI_PANEL_Y+65,22,COLOR_CURRENCY);
     deck.DrawPlaying();
     waves.Draw();
-    DrawText("[1-5] Select  [LMB] Place  [RMB] Sell  [U] Upgrade Tower  [ESC] Cancel  [F11] Fullscreen",20,UI_PANEL_Y+UI_PANEL_HEIGHT-18,10,COLOR_TEXT_DIM);
-}
 
-// ─── Hover Tooltip ──────────────────────────────────────
-// (Called from Draw after grid is rendered but before UI overlay)
+    // Ult cooldown in UI
+    if (hero.IsUltReady()) {
+        float pulse = 0.6f + 0.4f * sinf((float)GetTime()*3.0f);
+        DrawText("[Q] ULTIMATE READY", SCREEN_WIDTH-250, UI_PANEL_Y+75, 14,
+                 Fade(COLOR_CURRENCY, pulse));
+    } else if (hero.IsUltActive()) {
+        DrawText("ULT ACTIVE!", SCREEN_WIDTH-200, UI_PANEL_Y+75, 14,
+                 Fade(COLOR_CURRENCY, 0.9f));
+    } else {
+        float pct = hero.GetUltCooldownPercent();
+        // Cooldown bar
+        DrawRectangle(SCREEN_WIDTH-250, UI_PANEL_Y+78, 120, 8, CLITERAL(Color){40,40,40,200});
+        DrawRectangle(SCREEN_WIDTH-250, UI_PANEL_Y+78, (int)(120*(1.0f-pct)), 8,
+                      Fade(COLOR_CURRENCY, 0.5f));
+        char ubuf[32]; snprintf(ubuf, sizeof(ubuf), "ULT: %.0f%%", (1.0f-pct)*100.0f);
+        DrawText(ubuf, SCREEN_WIDTH-250, UI_PANEL_Y+90, 10, COLOR_TEXT_DIM);
+    }
 
-void Game::DrawBase() const {
-    Vector2 bp=pathPoints.back(); float p=1.0f+0.08f*sinf((float)GetTime()*2.0f);
-    DrawCircleV(bp,28*p,Fade(COLOR_BASE,0.15f)); DrawCircleV(bp,20*p,Fade(COLOR_BASE,0.3f));
-    DrawPoly(bp,6,14*p,0,COLOR_BASE); DrawPoly(bp,6,8*p,30,Fade(WHITE,0.4f));
-    DrawText("BASE",(int)(bp.x-16),(int)(bp.y+24),10,Fade(COLOR_BASE,0.8f));
+    DrawText("[1-5] Select  [LMB] Place  [RMB] Sell  [U] Upgrade  [Q] Ultimate  [F11] Fullscreen",
+             20,UI_PANEL_Y+UI_PANEL_HEIGHT-18,10,COLOR_TEXT_DIM);
 }
 
 void Game::DrawPortal() const {
