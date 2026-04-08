@@ -33,8 +33,9 @@ void GridNode::UpdateAll(float dt, std::vector<Enemy>& enemies, std::vector<Proj
 }
 
 void GridNode::DrawAll() const {
+    const float STACK_Y_OFFSET = 20.0f;
     for (int i = 0; i < (int)towerStack.size(); i++)
-        towerStack[i].Draw(-i * 12.0f);
+        towerStack[i].Draw(-i * STACK_Y_OFFSET);
 }
 
 bool GridNode::IsEmpty() const { return towerStack.empty(); }

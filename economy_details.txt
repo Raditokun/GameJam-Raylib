@@ -1,0 +1,56 @@
+# ALIEN TD - GAME ECONOMY & DETAILS
+
+This document outlines how the in-game economy functions, including resource generation, tower pricing, upgrading expenses, and selling refunds.
+
+## 1. Initial Resources
+*   **Starting Health:** 20 HP
+*   **Starting Currency:** $200
+  
+---
+
+## 2. Income Generation (Killing Enemies)
+You earn money by successfully defeating waves of enemies. The bounty varies by enemy type:
+
+*   **Grunt (Green):** $10 per kill
+*   **Fast (Cyan):** $15 per kill
+*   **Tank (Orange):** $25 per kill
+*   **Boss (Pink):** $100 per kill
+
+---
+
+## 3. Placement Costs (Tower Purchasing)
+Towers must be drafted into your deck, drawn to your hand, and placed using currency. Larger Tiers cost substantially more.
+
+**Base Costs (Tier 1):**
+*   **Laser:** $50
+*   **Freeze:** $60
+*   **Plasma:** $65
+*   **Missile:** $75
+*   **Tesla:** $80
+
+**Tier Cost Scaling:**
+*   **Tier 1 (Mk.I):** 100% of Base Cost
+*   **Tier 2 (Mk.II):** 200% of Base Cost
+*   **Tier 3 (Mk.III):** 400% of Base Cost
+
+*(Example: A Tier 3 Tesla Tower costs $320 to place).*
+
+---
+
+## 4. Field Upgrades
+Once a tower card is out on the field, it can be leveled up from Level 1 to Level 5. The cost to level up depends on its *Placement Cost*, getting more expensive each time.
+
+*   **Upgrade Lv1 → Lv2:** 50% of placement cost
+*   **Upgrade Lv2 → Lv3:** 75% of placement cost
+*   **Upgrade Lv3 → Lv4:** 100% of placement cost
+*   **Upgrade Lv4 → Lv5 (MAX):** 150% of placement cost
+
+*(Example: A Tier 1 Laser Tower placement cost is $50. Upgrading it to Level 2 will cost $25. Upgrading it from Level 4 to Level 5 will cost $75).*
+
+---
+
+## 5. Selling Towers
+You can right-click any stack to sell the TOP tower on that stack. 
+
+*   **Refund Rate:** You are refunded **75%** of the tower's original placement cost.
+*   **Penalty / Note:** Field upgrades (Lv 1->5) do *not* increase your refund size. You only get back 75% of the base tier card placement cost, meaning selling highly upgraded towers carries a large financial loss. 
