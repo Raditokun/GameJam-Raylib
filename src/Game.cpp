@@ -42,10 +42,17 @@ void Game::Init() {
     camera.zoom = 1.0f;
     screenShakeTimer = 0;
 
+    // ── Load Assets (must be after window init) ──────────
+    assets.Load("projectile_laser_test", "assets/Laser.png");
+
     state = GameState::DRAFTING;
     currency = STARTING_CURRENCY;
     enemies.clear();
     projectiles.clear();
+}
+
+void Game::Shutdown() {
+    assets.UnloadAll();
 }
 
 void Game::InitGrid() {
@@ -299,7 +306,7 @@ void Game::Draw() const {
     }
 
     for (auto& e : enemies) e.Draw();
-    for (auto& p : projectiles) p.Draw();
+    for (auto& p : projectiles) p.Draw(const_cast<AssetManager*>(&assets));
 
     // Ultimate laser drawn on top of path/enemies
     DrawUltLaser();

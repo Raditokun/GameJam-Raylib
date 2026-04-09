@@ -3,6 +3,7 @@
 #include "Constants.h"
 
 class Enemy; // forward declare
+class AssetManager; // forward declare
 
 class Projectile {
 public:
@@ -15,6 +16,6 @@ public:
 
     Projectile(Vector2 pos, Vector2 dir, float dmg, float spd, TowerType src, Color col, bool freeze = false);
     void Update(float dt);
-    void Draw() const;
+    void Draw(AssetManager* assets = nullptr) const;
     bool CheckCollision(Enemy& enemy);
 };

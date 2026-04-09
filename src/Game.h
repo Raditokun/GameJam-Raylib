@@ -9,6 +9,7 @@
 #include "WaveManager.h"
 #include "ShopManager.h"
 #include "Hero.h"
+#include "AssetManager.h"
 
 class Game {
 public:
@@ -25,6 +26,7 @@ public:
     WaveManager  waves;
     ShopManager  shop;
     Hero         hero;
+    AssetManager assets;
 
     std::vector<Vector2> pathPoints;
     bool pathCells[GRID_ROWS][GRID_COLS];
@@ -35,6 +37,7 @@ public:
 
     Game();
     void Init();
+    void Shutdown();     // call before CloseWindow to free GPU textures
     void Update(float dt);
     void Draw() const;
 

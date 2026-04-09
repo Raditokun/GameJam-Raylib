@@ -1,5 +1,6 @@
 #include "Projectile.h"
 #include "Enemy.h"
+#include "AssetManager.h"
 #include <cmath>
 
 Projectile::Projectile(Vector2 pos, Vector2 dir, float dmg, float spd, TowerType src, Color col, bool freeze)
@@ -15,8 +16,28 @@ void Projectile::Update(float dt) {
         active = false;
 }
 
-void Projectile::Draw() const {
+void Projectile::Draw(AssetManager* assets) const {
     if (!active) return;
+
+    // ── Laser projectile: use sprite if available ────────
+    if (sourceType == TowerType::LASER && assets) {
+        Texture2D* tex = assets->Get("projectile_laser_test");
+        if (tex && tex->id > 0) {
+            // Rotate sprite to face movement direction, centered on position
+            float angle = atan2f(direction.y, direction.x) * RAD2DEG;
+            Rectangle src = {0, 0, (float)tex->width, (float)tex->height};
+            Rectangle dst = {position.x, position.y, (float)tex->width, (float)tex->height};
+            Vector2 origin = {tex->width / 2.0f, tex->height / 2.0f};
+            DrawTexturePro(*tex, src, dst, origin, angle, WHITE);
+
+            // Subtle glow trail behind the sprite
+            Vector2 trail = {position.x - direction.x*10, position.y - direction.y*10};
+            DrawLineEx(position, trail, 2.0f, Fade(color, 0.3f));
+            return;
+        }
+    }
+
+    // ── Fallback: procedural shape for all other types ───
     DrawCircleV(position, PROJECTILE_RADIUS+3, Fade(color, 0.2f));
     DrawCircleV(position, PROJECTILE_RADIUS, color);
     DrawCircleV(position, PROJECTILE_RADIUS*0.4f, WHITE);
