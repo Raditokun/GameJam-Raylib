@@ -70,6 +70,9 @@ void Game::Update(float dt) {
         if (IsKeyPressed(KEY_R)) Init();
         return;
     }
+    
+    hero.Update(dt, state == GameState::PLAYING && waves.waveActive);
+
     if (state == GameState::DRAFTING) { UpdateDrafting(); return; }
     if (state == GameState::SHOP)    { UpdateShop(); return; }
 
@@ -77,7 +80,6 @@ void Game::Update(float dt) {
     deck.UpdatePlaying();
     HandleInput();
     waves.Update(dt, enemies, pathPoints);
-    hero.Update(dt);
 
     for (int r=0;r<GRID_ROWS;r++)
         for (int c=0;c<GRID_COLS;c++)

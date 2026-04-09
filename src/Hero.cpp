@@ -20,7 +20,7 @@ void Hero::Init(Vector2 basePos) {
     pulseTimer = 0;
 }
 
-void Hero::Update(float dt) {
+void Hero::Update(float dt, bool isWaveActive) {
     pulseTimer += dt;
 
     if (ultActiveTimer > 0) {
@@ -29,8 +29,10 @@ void Hero::Update(float dt) {
             ultActiveTimer = 0;
         }
     } else if (ultCooldownTimer > 0) {
-        ultCooldownTimer -= dt;
-        if (ultCooldownTimer < 0) ultCooldownTimer = 0;
+        if (isWaveActive) {
+            ultCooldownTimer -= dt;
+            if (ultCooldownTimer < 0) ultCooldownTimer = 0;
+        }
     }
 }
 

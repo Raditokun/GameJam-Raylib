@@ -31,7 +31,7 @@ public:
     // ── Lifecycle ─────────────────────────────────────────
     Hero();
     void Init(Vector2 basePos);
-    void Update(float dt);
+    void Update(float dt, bool isWaveActive);
     void Draw() const;
 
     // ── Ultimate ──────────────────────────────────────────
