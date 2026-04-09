@@ -10,9 +10,9 @@ constexpr int SCREEN_HEIGHT = 1080;
 constexpr int TARGET_FPS    = 60;
 
 // ─── Grid ───────────────────────────────────────────────
-constexpr int GRID_COLS   = 30;
-constexpr int GRID_ROWS   = 14;
-constexpr int CELL_SIZE   = 64;
+constexpr int GRID_COLS   = 30; // cells
+constexpr int GRID_ROWS   = 14; // cells
+constexpr int CELL_SIZE   = 64; // pxs
 constexpr int GRID_HEIGHT = GRID_ROWS * CELL_SIZE;
 
 // ─── UI Panel ───────────────────────────────────────────
