@@ -1,4 +1,5 @@
 #include "Card.h"
+#include "AssetManager.h"
 #include <cstdio>
 #include <cmath>
 
@@ -21,7 +22,23 @@ static void DrawTowerIcon(float cx, float cy, TowerType type, float scale, Color
     }
 }
 
-void Card::DrawInHand(Rectangle r) const {
+void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
+    // ── Asset Integration Override ───────────────────────────
+    if (def.towerType == TowerType::LASER && def.baseTier == 1 && assets) {
+        Texture2D* tex = assets->Get("Tower_Laser__Card_T1");
+        if (tex && tex->id > 0) {
+            // Draw the entire card texture
+            Rectangle src = { 0, 0, (float)tex->width, (float)tex->height };
+            DrawTexturePro(*tex, src, r, {0,0}, 0.0f, WHITE);
+            
+            // Keep selection highlight if selected
+            if (selected) {
+                DrawRectangleLinesEx({r.x-2, r.y-2, r.width+4, r.height+4}, 3, COLOR_CARD_SEL);
+            }
+            return;
+        }
+    }
+
     Color tierCol = GetTierAccent(def.baseTier);
     Color border = selected ? COLOR_CARD_SEL : tierCol;
     float thick = selected ? 3.0f : 1.5f;
@@ -54,7 +71,24 @@ void Card::DrawInHand(Rectangle r) const {
     DrawText(buf, (int)(r.x+10), (int)(r.y+100), 14, COLOR_CURRENCY);
 }
 
-void Card::DrawInDraft(Rectangle r) const {
+void Card::DrawInDraft(Rectangle r, AssetManager* assets) const {
+    // ── Asset Integration Override ───────────────────────────
+    if (def.towerType == TowerType::LASER && def.baseTier == 1 && assets) {
+        Texture2D* tex = assets->Get("Tower_Laser__Card_T1");
+        if (tex && tex->id > 0) {
+            // Draw the entire card texture
+            Rectangle src = { 0, 0, (float)tex->width, (float)tex->height };
+            DrawTexturePro(*tex, src, r, {0,0}, 0.0f, WHITE);
+            
+            // Keep selection highlight/text if picked
+            if (draftSelected) {
+                DrawRectangleLinesEx({r.x-3, r.y-3, r.width+6, r.height+6}, 2, Fade(COLOR_CARD_SEL,0.5f));
+                DrawText("PICKED", (int)(r.x+r.width-55), (int)(r.y+8), 10, COLOR_CARD_SEL);
+            }
+            return;
+        }
+    }
+
     Color tierCol = GetTierAccent(def.baseTier);
     Color border = draftSelected ? COLOR_CARD_SEL : tierCol;
     float thick = draftSelected ? 3.0f : 1.5f;

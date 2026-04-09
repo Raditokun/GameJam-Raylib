@@ -3,6 +3,8 @@
 #include <set>
 #include "Card.h"
 
+class AssetManager;
+
 // ─── DeckManager (Overhauled) ───────────────────────────
 // Now supports:
 //  - Dynamic hand capacity (starts at 3, upgradeable to 5)
@@ -41,14 +43,14 @@ public:
 
     // ── Drafting (T1 only) ───────────────────────────────
     void UpdateDrafting();
-    void DrawDrafting() const;
+    void DrawDrafting(AssetManager* assets = nullptr) const;
     bool IsDraftReady() const;
     void FinalizeDraft();
     bool IsTierAllowedInDraft(int tier) const;  // returns true only for T1
 
     // ── Playing ──────────────────────────────────────────
     void UpdatePlaying();
-    void DrawPlaying() const;
+    void DrawPlaying(AssetManager* assets = nullptr) const;
     Card* GetSelectedCard();
     void DeselectAll();
     bool HasSelection() const;

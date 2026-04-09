@@ -59,7 +59,7 @@ void DeckManager::UpdateDrafting() {
     }
 }
 
-void DeckManager::DrawDrafting() const {
+void DeckManager::DrawDrafting(AssetManager* assets) const {
     const char* title = "DRAFT YOUR DECK";
     int tw = MeasureText(title, 40);
     DrawText(title, (SCREEN_WIDTH-tw)/2, 30, 40, COLOR_TEXT_MAIN);
@@ -88,7 +88,7 @@ void DeckManager::DrawDrafting() const {
             DrawRectangleLinesEx(r, 1, Fade(COLOR_TEXT_DIM, 0.3f));
             DrawText("LOCKED", (int)(r.x + r.width/2 - 28), (int)(r.y + r.height/2 - 6), 12, Fade(COLOR_TEXT_DIM, 0.5f));
         } else {
-            pool[i].DrawInDraft(r);
+            pool[i].DrawInDraft(r, assets);
         }
     }
 
@@ -150,9 +150,9 @@ void DeckManager::UpdatePlaying() {
     if (IsKeyPressed(KEY_ESCAPE)) DeselectAll();
 }
 
-void DeckManager::DrawPlaying() const {
+void DeckManager::DrawPlaying(AssetManager* assets) const {
     for (int i = 0; i < (int)hand.size(); i++)
-        hand[i].DrawInHand(GetHandSlotRect(i));
+        hand[i].DrawInHand(GetHandSlotRect(i), assets);
 }
 
 Card* DeckManager::GetSelectedCard() {

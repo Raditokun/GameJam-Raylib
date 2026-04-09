@@ -44,6 +44,7 @@ void Game::Init() {
 
     // ── Load Assets (must be after window init) ──────────
     assets.Load("projectile_laser_test", "assets/Laser.png");
+    assets.Load("Tower_Laser__Card_T1", "assets/LaserT1Card.png");
 
     state = GameState::DRAFTING;
     currency = STARTING_CURRENCY;
@@ -370,7 +371,7 @@ void Game::Draw() const {
 
 void Game::DrawDrafting() const {
     ClearBackground(COLOR_DRAFT_BG);
-    deck.DrawDrafting();
+    deck.DrawDrafting(const_cast<AssetManager*>(&assets));
 
     for (int i = 0; i < (int)pathPoints.size()-1; i++)
         DrawLineEx(pathPoints[i], pathPoints[i+1], 2, Fade(COLOR_PATH_BORDER, 0.15f));
@@ -403,7 +404,7 @@ void Game::DrawUI() const {
     DrawRectangle(20,UI_PANEL_Y+45,(int)(120*hpR),8,COLOR_HEALTH_BAR);
     char cbuf[32]; snprintf(cbuf,sizeof(cbuf),"$ %d",currency);
     DrawText(cbuf,20,UI_PANEL_Y+65,22,COLOR_CURRENCY);
-    deck.DrawPlaying();
+    deck.DrawPlaying(const_cast<AssetManager*>(&assets));
     waves.Draw();
 
     // Ult cooldown in UI

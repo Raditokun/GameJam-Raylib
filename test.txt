@@ -1,0 +1,25 @@
+Batch Asset Integration - [INSERT GROUP NAME, e.g., "Laser Towers" or "Enemies"]
+
+I have added a new batch of .png assets to the assets/ folder. We need to load these into the AssetManager and update the corresponding Draw() logic to render them.
+
+1. Asset Load List:
+Please update Game::Init() (or our asset loading function) to include these new textures. Use the exact keys and file paths below:
+
+AssetManager::Load("[KEY_NAME_1]", "assets/[FILE_NAME_1].png");
+
+AssetManager::Load("[KEY_NAME_2]", "assets/[FILE_NAME_2].png");
+
+AssetManager::Load("[KEY_NAME_3]", "assets/[FILE_NAME_3].png");
+(Add or remove lines as needed for this batch)
+
+2. Implementation target: [INSERT TARGET FILE, e.g., "Tower.cpp" or "Enemy.cpp"]
+
+Remove any remaining procedural drawing shapes (circles/rectangles) for this specific entity type.
+
+Implement the logic to fetch the correct texture key from the AssetManager based on the entity's type/tier.
+
+CRITICAL DRAWING MATH: Use DrawTexturePro() or calculate the X, Y offset so that the sprite anchors correctly to the grid coordinates.
+
+(Architect Note: If this is a Tower, the origin must be BOTTOM-CENTER. If this is an Enemy/Projectile, the origin should be ABSOLUTE CENTER).
+
+Please output ONLY the updated asset loading block in Game::Init() and the specific Draw() function you modified.
