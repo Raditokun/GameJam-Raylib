@@ -1,0 +1,83 @@
+1. Entities & Objects
+⭐⭐⭐Towers (Needs assets for Tiers 1, 2, and 3 each)
+
+Laser Tower: T1, T2, T3
+Missile Tower: T1, T2, T3
+Freeze Tower: T1, T2, T3
+Tesla Tower: T1, T2, T3
+Plasma Tower: T1, T2, T3
+Note: Consideration may also be needed for Field Level (1-5 upgrades) and synergy multiplier visual indicators.
+
+
+⭐⭐⭐Hero Character (Positioned at the end of the path)
+
+⭐Idle State (default animated pulsing state)
+⭐Ultimate Firing State
+⭐⭐⭐Ultimate Laser / Massive AoE beam path-tracing visual
+⭐Taking Damage / Hit state
+
+⭐⭐⭐Enemies
+
+Grunt (Standard)
+Fast
+Tank
+Boss
+
+⭐⭐Projectiles
+
+Standard projectile visual (currently categorized by speed, damage, and color)
+Freeze-specific projectile or impact effect
+Ideally, distinct assets/trails for: Laser bolts, Missiles, Tesla lightning arcs, and Plasma orbs.
+2. Environment
+Map Elements
+
+⭐⭐⭐Background Environment: Main game background (currently an alien neon theme)
+⭐⭐⭐Enemy Portal: The spawn point where enemies enter the map
+⭐⭐⭐Hero Base: The final waypoint location housing the Hero
+⭐⭐Grid & Pathing
+
+Standard empty grid node
+⭐⭐Path track (requires a surface fill, borders, and a neon glow effect)
+Placement Hover States:
+Valid placement hint (green/valid tint)
+Invalid placement hint (red/invalid tint)
+
+
+3. UI Elements
+⭐⭐⭐Deck / Hand UI (Bottom Panel)
+
+Card Slots: The background shell for up to 5 hand slots (begins at 3).
+Card Face: Base design for the card including Tower Icon slot, Tier indicator (Mk. I, II, III), Name, and Placement Cost.
+Card States:
+Empty Slot
+Hovered / Selected outline
+Active/In-drag state
+Shop UI (Between-Wave Shop Screen)
+
+
+
+
+⭐⭐Main Shop Panel / Background
+Random Stock Display: For T2/T3 cards on offer
+Locked / Unlocked Status: Visual representation indicating if a player meets the lower-tier prerequisite to buy a specific card.
+Item Price Tag / Currency Box
+Capacity Upgrade Icon/Button: For purchasing hand size increases (+1 slot).
+"Sold Out" State: Visual indicator over purchased items or the capacity upgrade.
+Continue / Resume Action Button: To exit the shop and start the next wave.
+
+
+In-Game HUD
+
+
+
+Hero Health Bar: distinct from generic UI panels
+Currency/Gold Display
+Wave Counter / Progress Tracker
+Ultimate Cooldown Indicator: E.g., a progress ring or cooldown gauge filling up visually percent-by-percent.
+Tower Contextual UI: When interacting with a placed tower stack on the grid, hinting its Top Tier, whether you can upgrade it, and its Upgrade Cost.
+Screens & Overlays
+
+Drafting Phase Screen: Opening draft background, grid layout for the T1 draft pool, and selection highlights.
+Game Over Screen: Dimming overlay and stylized failure text/options.
+Victory Screen: Dimming overlay and stylized success presentation.
+Global Vfx: Screen shake overlay/effect logic triggered by damage or impacts.
