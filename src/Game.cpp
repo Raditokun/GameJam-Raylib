@@ -56,7 +56,22 @@ void Game::Init() {
     assets.Load("proj_freeze", "assets/frezze_partikel.png");
     assets.Load("proj_tesla", "assets/Tesla_Partikel.png");
     assets.Load("proj_plasma", "assets/Plasma_Partikel.png");
-    assets.Load("Tower_Laser__Card_T1", "assets/LaserT1Card.png");
+    // ── Card sprites (5 types × 3 tiers) ─────────────────
+    assets.Load("card_laser_t1",   "assets/LaserT1Card.png");
+    assets.Load("card_laser_t2",   "assets/LaserT2Card.png");
+    assets.Load("card_laser_t3",   "assets/LaserT3Card.png");
+    assets.Load("card_missile_t1", "assets/MissileT1Card.png");
+    assets.Load("card_missile_t2", "assets/MissileT2Card.png");
+    assets.Load("card_missile_t3", "assets/MissileT3Card.png");
+    assets.Load("card_freeze_t1",  "assets/FreezeT1Card.png");
+    assets.Load("card_freeze_t2",  "assets/FreezeT2Card.png");
+    assets.Load("card_freeze_t3",  "assets/FreezeT3Card.png");
+    assets.Load("card_tesla_t1",   "assets/TeslaT1Card.png");
+    assets.Load("card_tesla_t2",   "assets/TeslaT2Card.png");
+    assets.Load("card_tesla_t3",   "assets/TeslaT3Card.png");
+    assets.Load("card_plasma_t1",  "assets/PlasmaT1Card.png");
+    assets.Load("card_plasma_t2",  "assets/PlasmaT2Card.png");
+    assets.Load("card_plasma_t3",  "assets/PlasmaT3Card.png");
     assets.Load("menu_bg", "assets/start.png");
     assets.Load("hero_marine", "assets/HeroMarine.png");
     assets.Load("ult_lightning", "assets/Lightning Strike.png");
@@ -515,7 +530,7 @@ void Game::DrawDrafting() const {
 }
 
 void Game::DrawShop() const {
-    shop.DrawShop(currency, deck);
+    shop.DrawShop(currency, deck, const_cast<AssetManager*>(&assets));
 }
 
 void Game::DrawGrid() const {

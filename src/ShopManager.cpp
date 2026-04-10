@@ -1,5 +1,6 @@
 #include "ShopManager.h"
 #include "DeckManager.h"
+#include "AssetManager.h"
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
@@ -124,7 +125,7 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck) {
 
 // ─── Draw ───────────────────────────────────────────────
 
-void ShopManager::DrawShop(int currency, const DeckManager& deck) const {
+void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* assets) const {
     // Background overlay
     DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Fade(BLACK, 0.85f));
 
@@ -270,7 +271,7 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck) const {
         for (int i = 0; i < (int)deck.hand.size(); i++) {
             Rectangle r = GetHandSlotRect(i);
             r.y = SCREEN_HEIGHT - 160;
-            deck.hand[i].DrawInHand(r);
+            deck.hand[i].DrawInHand(r, assets);
 
             // Sell price label
             int tier = deck.hand[i].def.baseTier;
