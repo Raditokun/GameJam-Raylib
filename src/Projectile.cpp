@@ -17,32 +17,27 @@ void Projectile::Update(float dt) {
 }
 
 void Projectile::Draw(AssetManager* assets) const {
-    if (!active) return;
+    if (!active || !assets) return;
 
-    // ── Laser projectile: use sprite if available ────────
-    if (sourceType == TowerType::LASER && assets) {
-        Texture2D* tex = assets->Get("projectile_laser_test");
+    const char* texKey = nullptr;
+    switch (sourceType) {
+        case TowerType::LASER:   texKey = "proj_laser"; break;
+        case TowerType::MISSILE: texKey = "proj_missile"; break;
+        case TowerType::FREEZE:  texKey = "proj_freeze"; break;
+        case TowerType::TESLA:   texKey = "proj_tesla"; break;
+        case TowerType::PLASMA:  texKey = "proj_plasma"; break;
+    }
+
+    if (texKey) {
+        Texture2D* tex = assets->Get(texKey);
         if (tex && tex->id > 0) {
-            // Rotate sprite to face movement direction, centered on position
             float angle = atan2f(direction.y, direction.x) * RAD2DEG;
             Rectangle src = {0, 0, (float)tex->width, (float)tex->height};
             Rectangle dst = {position.x, position.y, (float)tex->width, (float)tex->height};
             Vector2 origin = {tex->width / 2.0f, tex->height / 2.0f};
             DrawTexturePro(*tex, src, dst, origin, angle, WHITE);
-
-            // Subtle glow trail behind the sprite
-            Vector2 trail = {position.x - direction.x*10, position.y - direction.y*10};
-            DrawLineEx(position, trail, 2.0f, Fade(color, 0.3f));
-            return;
         }
     }
-
-    // ── Fallback: procedural shape for all other types ───
-    DrawCircleV(position, PROJECTILE_RADIUS+3, Fade(color, 0.2f));
-    DrawCircleV(position, PROJECTILE_RADIUS, color);
-    DrawCircleV(position, PROJECTILE_RADIUS*0.4f, WHITE);
-    Vector2 trail = {position.x - direction.x*8, position.y - direction.y*8};
-    DrawLineEx(position, trail, 2.0f, Fade(color, 0.4f));
 }
 
 bool Projectile::CheckCollision(Enemy& enemy) {

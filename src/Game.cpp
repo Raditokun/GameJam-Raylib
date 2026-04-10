@@ -43,7 +43,11 @@ void Game::Init() {
     screenShakeTimer = 0;
 
     // ── Load Assets (must be after window init) ──────────
-    assets.Load("projectile_laser_test", "assets/Laser.png");
+    assets.Load("proj_laser", "assets/laser_partikel.png");
+    assets.Load("proj_missile", "assets/missiles_partikel.png");
+    assets.Load("proj_freeze", "assets/frezze_partikel.png");
+    assets.Load("proj_tesla", "assets/Tesla_Partikel.png");
+    assets.Load("proj_plasma", "assets/Plasma_Partikel.png");
     assets.Load("Tower_Laser__Card_T1", "assets/LaserT1Card.png");
 
     state = GameState::DRAFTING;
