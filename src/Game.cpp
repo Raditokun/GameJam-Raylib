@@ -43,6 +43,12 @@ void Game::Init() {
     screenShakeTimer = 0;
 
     // ── Load Assets (must be after window init) ──────────
+    if (!IsAudioDeviceReady()) {
+        InitAudioDevice();
+        bgMusic = LoadMusicStream("assets/bgmusic.mp3");
+        bgMusic.looping = true;
+        PlayMusicStream(bgMusic);
+    }
     assets.Load("proj_laser", "assets/laser_partikel.png");
     assets.Load("proj_missile", "assets/missiles_partikel.png");
     assets.Load("proj_freeze", "assets/frezze_partikel.png");
@@ -50,6 +56,8 @@ void Game::Init() {
     assets.Load("proj_plasma", "assets/Plasma_Partikel.png");
     assets.Load("Tower_Laser__Card_T1", "assets/LaserT1Card.png");
     assets.Load("menu_bg", "assets/start.png");
+    assets.Load("hero_marine", "assets/HeroMarine.png");
+    assets.Load("ult_lightning", "assets/Lightning Strike.png");
 
     state = GameState::MAIN_MENU;
     currency = STARTING_CURRENCY;
@@ -59,6 +67,10 @@ void Game::Init() {
 
 void Game::Shutdown() {
     assets.UnloadAll();
+    if (IsAudioDeviceReady()) {
+        UnloadMusicStream(bgMusic);
+        CloseAudioDevice();
+    }
 }
 
 void Game::InitGrid() {
@@ -70,6 +82,10 @@ void Game::InitGrid() {
 // ─── Update ─────────────────────────────────────────────
 
 void Game::Update(float dt) {
+    if (IsAudioDeviceReady()) {
+        UpdateMusicStream(bgMusic);
+    }
+
     if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
 
     if (state == GameState::MAIN_MENU) {
@@ -275,22 +291,63 @@ void Game::DrawUltLaser() const {
     if (hero.ultActiveTimer <= 0) return;
 
     float alpha = hero.ultActiveTimer / hero.ultDuration; // fades out over duration
-    float t = (float)GetTime();
 
-    // Thick glowing laser segments tracing the entire path
-    for (int i = 0; i < (int)pathPoints.size()-1; i++) {
-        // Core beam (white-hot center)
-        DrawLineEx(pathPoints[i], pathPoints[i+1], 8.0f, Fade(WHITE, 0.9f * alpha));
-        // Inner glow (gold)
-        DrawLineEx(pathPoints[i], pathPoints[i+1], 16.0f, Fade(COLOR_CURRENCY, 0.6f * alpha));
-        // Outer glow (pulsing)
-        float pulse = 20.0f + 6.0f * sinf(t * 15.0f + i * 2.0f);
-        DrawLineEx(pathPoints[i], pathPoints[i+1], pulse, Fade(COLOR_CURRENCY, 0.15f * alpha));
-        // Halo
-        DrawLineEx(pathPoints[i], pathPoints[i+1], pulse + 12.0f, Fade(COLOR_CURRENCY, 0.05f * alpha));
+    // ── Try sprite-based lightning ────────────────────────
+    Texture2D* ltex = const_cast<AssetManager*>(&assets)->Get("ult_lightning");
+    if (ltex && ltex->id > 0) {
+        int frameSize = 64; // each frame is 64x64 in the sprite strip
+        Rectangle src = {
+            (float)(hero.currentUltFrame * frameSize), 0,
+            (float)frameSize, (float)frameSize
+        };
+
+        // Draw lightning beam along each path segment
+        for (int i = 0; i < (int)pathPoints.size()-1; i++) {
+            Vector2 a = pathPoints[i];
+            Vector2 b = pathPoints[i+1];
+            float dx = b.x - a.x, dy = b.y - a.y;
+            float segLen = sqrtf(dx*dx + dy*dy);
+            float angle = atan2f(dy, dx) * RAD2DEG;
+
+            // Stretch the 64px sprite to cover the full segment length
+            // Width = segment length, Height = beam thickness (64px)
+            Rectangle dst = {
+                a.x, a.y,
+                segLen, (float)frameSize
+            };
+            // Origin at left-center so the beam starts at point A
+            Vector2 origin = { 0, frameSize / 2.0f };
+
+            DrawTexturePro(*ltex, src, dst, origin, angle, Fade(WHITE, alpha));
+
+            // Extra glow layer (slightly larger, more transparent)
+            Rectangle dstGlow = {
+                a.x, a.y,
+                segLen, (float)(frameSize + 16)
+            };
+            Vector2 originGlow = { 0, (frameSize + 16) / 2.0f };
+            DrawTexturePro(*ltex, src, dstGlow, originGlow, angle,
+                           Fade(COLOR_CURRENCY, 0.25f * alpha));
+        }
+
+        // Bright nodes at each waypoint
+        float t = (float)GetTime();
+        for (auto& pt : pathPoints) {
+            float r = 10.0f + 4.0f * sinf(t * 12.0f);
+            DrawCircleV(pt, r, Fade(WHITE, 0.6f * alpha));
+        }
+        return;
     }
 
-    // Bright nodes at each waypoint
+    // ── Procedural fallback ───────────────────────────────
+    float t = (float)GetTime();
+    for (int i = 0; i < (int)pathPoints.size()-1; i++) {
+        DrawLineEx(pathPoints[i], pathPoints[i+1], 8.0f, Fade(WHITE, 0.9f * alpha));
+        DrawLineEx(pathPoints[i], pathPoints[i+1], 16.0f, Fade(COLOR_CURRENCY, 0.6f * alpha));
+        float pulse = 20.0f + 6.0f * sinf(t * 15.0f + i * 2.0f);
+        DrawLineEx(pathPoints[i], pathPoints[i+1], pulse, Fade(COLOR_CURRENCY, 0.15f * alpha));
+        DrawLineEx(pathPoints[i], pathPoints[i+1], pulse + 12.0f, Fade(COLOR_CURRENCY, 0.05f * alpha));
+    }
     for (auto& pt : pathPoints) {
         float r = 10.0f + 4.0f * sinf(t * 12.0f);
         DrawCircleV(pt, r, Fade(WHITE, 0.8f * alpha));
@@ -328,7 +385,7 @@ void Game::Draw() const {
     DrawPath(); DrawGrid(); DrawPortal();
 
     // Hero replaces old DrawBase()
-    hero.Draw();
+    hero.Draw(const_cast<AssetManager*>(&assets));
 
     for (int r=0;r<GRID_ROWS;r++) for(int c=0;c<GRID_COLS;c++) grid[r][c].DrawAll();
 

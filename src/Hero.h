@@ -5,6 +5,8 @@
 // The Hero sits at the end of the path. It has HP, a visual
 // representation, and a Kill-Charged Ultimate ability.
 
+class AssetManager; // forward declaration
+
 class Hero {
 public:
     // ── Identity ──────────────────────────────────────────
@@ -24,14 +26,25 @@ public:
     float ultRadius;        // area-of-effect radius (unused now, kept for compat)
     bool  isUltFiring;      // true on the ONE frame damage is applied
 
-    // ── Visual ────────────────────────────────────────────
-    float pulseTimer;       // internal animation timer
+    // ── Visual / Idle Animation ──────────────────────────
+    float pulseTimer;       // internal animation timer (legacy, kept for UI pulse)
+    float animTimer;        // sprite sheet frame timer
+    int   currentFrame;     // current idle animation frame (0-4)
+    static constexpr float FRAME_TIME = 0.15f;
+    static constexpr int   IDLE_FRAMES = 5;
+    static constexpr int   SPRITE_SIZE = 64;
+
+    // ── Ultimate Animation ───────────────────────────────
+    float ultAnimTimer;     // ult sprite frame timer
+    int   currentUltFrame;  // current ult animation frame (starts at 9, loops 2→0)
+    static constexpr float ULT_FRAME_TIME = 0.05f;
+    static constexpr int   ULT_TOTAL_FRAMES = 10;
 
     // ── Lifecycle ─────────────────────────────────────────
     Hero();
     void Init(Vector2 basePos);
     void Update(float dt, bool isWaveActive);
-    void Draw() const;
+    void Draw(AssetManager* assets = nullptr) const;
 
     // ── Ultimate ──────────────────────────────────────────
     bool  IsUltReady() const;

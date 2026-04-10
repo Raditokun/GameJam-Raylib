@@ -35,6 +35,9 @@ public:
     Camera2D camera;
     float screenShakeTimer;
 
+    // ── Audio ────────────────────────────────────────────
+    Music bgMusic;
+
     Game();
     void Init();
     void Shutdown();     // call before CloseWindow to free GPU textures
