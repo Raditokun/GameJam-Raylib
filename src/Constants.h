@@ -62,7 +62,7 @@ inline TowerStats GetBaseTowerStats(TowerType type) {
 }
 
 inline TowerStats GetTierStats(TowerType type, int tier) {
-    TowerStats b = GetBaseTowerStats(type);
+    TowerStats b = GetBaseTowerStats(type); 
     if (tier == 2) return {b.damage*1.75f, b.range*1.2f, b.fireRate*1.3f, b.cost*2,   1.4f};
     if (tier == 3) return {b.damage*2.5f,  b.range*1.4f, b.fireRate*1.6f, b.cost*4,   1.8f};
     return b;
