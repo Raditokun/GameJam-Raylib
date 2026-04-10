@@ -1,6 +1,8 @@
 #include "AssetManager.h"
 #include <cstdio>
 
+std::map<std::string, Sound> AssetManager::sounds;
+
 AssetManager::AssetManager() {}
 
 AssetManager::~AssetManager() {
@@ -46,4 +48,36 @@ void AssetManager::UnloadAll() {
         }
     }
     textures.clear();
+
+    for (auto& pair : sounds) {
+        if (pair.second.stream.buffer != NULL) {
+            UnloadSound(pair.second);
+            printf("[AssetManager] Unloaded sound \"%s\"\n", pair.first.c_str());
+        }
+    }
+    sounds.clear();
+}
+
+void AssetManager::LoadSoundAsset(const std::string& key, const std::string& path) {
+    auto it = sounds.find(key);
+    if (it != sounds.end()) {
+        UnloadSound(it->second);
+        sounds.erase(it);
+    }
+    Sound snd = LoadSound(path.c_str());
+    if (snd.stream.buffer == NULL) {
+        printf("[AssetManager] WARNING: Failed to load sound \"%s\" from \"%s\"\n", key.c_str(), path.c_str());
+        return;
+    }
+    sounds[key] = snd;
+    printf("[AssetManager] Loaded sound \"%s\" from \"%s\"\n", key.c_str(), path.c_str());
+}
+
+Sound AssetManager::GetSound(const std::string& key) {
+    auto it = sounds.find(key);
+    if (it == sounds.end()) {
+        Sound empty = {0};
+        return empty;
+    }
+    return it->second;
 }

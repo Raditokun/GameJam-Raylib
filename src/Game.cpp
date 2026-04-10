@@ -45,9 +45,11 @@ void Game::Init() {
     // ── Load Assets (must be after window init) ──────────
     if (!IsAudioDeviceReady()) {
         InitAudioDevice();
-        bgMusic = LoadMusicStream("assets/bgmusic.mp3");
-        bgMusic.looping = true;
+        playlist = { "assets/bg/1.MP3", "assets/bg/2.MP3", "assets/bg/3.MP3", "assets/bg/4.MP3", "assets/bg/5.MP3" };
+        currentTrackIndex = 0;
+        bgMusic = LoadMusicStream(playlist[currentTrackIndex].c_str());
         PlayMusicStream(bgMusic);
+        skipBtn = { (float)GetScreenWidth() - 350, (float)GetScreenHeight() - 60, 60, 30 };
     }
     assets.Load("proj_laser", "assets/laser_partikel.png");
     assets.Load("proj_missile", "assets/missiles_partikel.png");
@@ -58,6 +60,12 @@ void Game::Init() {
     assets.Load("menu_bg", "assets/start.png");
     assets.Load("hero_marine", "assets/HeroMarine.png");
     assets.Load("ult_lightning", "assets/Lightning Strike.png");
+    AssetManager::LoadSoundAsset("sfx_laser", "assets/laser_sound.mp3");
+    AssetManager::LoadSoundAsset("sfx_missile", "assets/missile_sound.mp3");
+    AssetManager::LoadSoundAsset("sfx_freeze", "assets/freeze_sound.wav");
+    AssetManager::LoadSoundAsset("sfx_tesla", "assets/tesla_sound.MP3");
+    AssetManager::LoadSoundAsset("sfx_plasma", "assets/plasma_sound.mp3");
+    AssetManager::LoadSoundAsset("sfx_ult", "assets/ult_sound.mp3");
 
     state = GameState::MAIN_MENU;
     currency = STARTING_CURRENCY;
@@ -79,11 +87,25 @@ void Game::InitGrid() {
             grid[r][c] = GridNode(r, c, pathCells[r][c]);
 }
 
+void Game::PlayNextTrack() {
+    StopMusicStream(bgMusic);
+    UnloadMusicStream(bgMusic);
+    currentTrackIndex = (currentTrackIndex + 1) % playlist.size();
+    bgMusic = LoadMusicStream(playlist[currentTrackIndex].c_str());
+    PlayMusicStream(bgMusic);
+}
+
 // ─── Update ─────────────────────────────────────────────
 
 void Game::Update(float dt) {
     if (IsAudioDeviceReady()) {
         UpdateMusicStream(bgMusic);
+        if (GetMusicTimePlayed(bgMusic) >= GetMusicTimeLength(bgMusic)) {
+            PlayNextTrack();
+        }
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), skipBtn)) {
+            PlayNextTrack();
+        }
     }
 
     if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
@@ -504,6 +526,12 @@ void Game::DrawUI() const {
     DrawText(cbuf,20,UI_PANEL_Y+65,22,COLOR_CURRENCY);
     deck.DrawPlaying(const_cast<AssetManager*>(&assets));
     waves.Draw();
+
+    // ── Music Player UI ──────────────────────────────────
+    DrawRectangleRec(skipBtn, CLITERAL(Color){30,30,30,255});
+    DrawRectangleLinesEx(skipBtn, 1, COLOR_CURRENCY);
+    DrawText("[ >> ]", skipBtn.x + 12, skipBtn.y + 8, 14, COLOR_CURRENCY);
+    DrawText(TextFormat("Track: %d", currentTrackIndex + 1), skipBtn.x - 100, skipBtn.y + 5, 20, RAYWHITE);
 
     // Ult charge in UI (kill-based)
     if (hero.IsUltReady()) {

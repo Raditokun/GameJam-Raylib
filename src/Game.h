@@ -37,6 +37,10 @@ public:
 
     // ── Audio ────────────────────────────────────────────
     Music bgMusic;
+    std::vector<std::string> playlist;
+    int currentTrackIndex = 0;
+    Rectangle skipBtn;
+    void PlayNextTrack();
 
     Game();
     void Init();

@@ -45,6 +45,11 @@ public:
     // Unload all textures from GPU memory and clear the map.
     void UnloadAll();
 
+    // ── Sounds ───────────────────────────────────────────
+    static void LoadSoundAsset(const std::string& key, const std::string& path);
+    static Sound GetSound(const std::string& key);
+
 private:
     std::map<std::string, Texture2D> textures;
+    static std::map<std::string, Sound> sounds;
 };

@@ -1,6 +1,8 @@
 #include "Tower.h"
 #include "Enemy.h"
 #include "Projectile.h"
+#include "Constants.h"
+#include "AssetManager.h"
 #include <cmath>
 #include <cstdio>
 
@@ -178,4 +180,12 @@ void Tower::Shoot(Enemy* t, std::vector<Projectile>& proj) {
     if (d == 0) return;
     Vector2 dir = {dx/d, dy/d};
     proj.emplace_back(position, dir, effectiveStats.damage, 300.0f, type, GetTowerColor(type), type==TowerType::FREEZE);
+
+    switch (type) {
+        case TowerType::LASER:   PlaySound(AssetManager::GetSound("sfx_laser")); break;
+        case TowerType::MISSILE: PlaySound(AssetManager::GetSound("sfx_missile")); break;
+        case TowerType::FREEZE:  PlaySound(AssetManager::GetSound("sfx_freeze")); break;
+        case TowerType::TESLA:   PlaySound(AssetManager::GetSound("sfx_tesla")); break;
+        case TowerType::PLASMA:  PlaySound(AssetManager::GetSound("sfx_plasma")); break;
+    }
 }
