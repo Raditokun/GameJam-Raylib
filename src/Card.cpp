@@ -2,10 +2,29 @@
 #include "AssetManager.h"
 #include <cstdio>
 #include <cmath>
+#include <string>
 
 Card::Card() : def({0, TowerType::LASER, 1}), selected(false), draftSelected(false) {}
 Card::Card(CardDef d) : def(d), selected(false), draftSelected(false) {}
 
+// ── Build the AssetManager key for a card texture ────────
+// Maps TowerType + baseTier → "card_laser_t1", "card_missile_t3", etc.
+static std::string GetCardTextureKey(TowerType type, int tier) {
+    const char* prefix = "card_";
+    const char* typeName = "";
+    switch (type) {
+        case TowerType::LASER:   typeName = "laser";   break;
+        case TowerType::MISSILE: typeName = "missile";  break;
+        case TowerType::FREEZE:  typeName = "freeze";   break;
+        case TowerType::TESLA:   typeName = "tesla";    break;
+        case TowerType::PLASMA:  typeName = "plasma";   break;
+    }
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%s%s_t%d", prefix, typeName, tier);
+    return std::string(buf);
+}
+
+// ── Procedural icon fallback (only used when texture missing) ─
 static void DrawTowerIcon(float cx, float cy, TowerType type, float scale, Color tc) {
     switch (type) {
     case TowerType::LASER:
@@ -23,15 +42,15 @@ static void DrawTowerIcon(float cx, float cy, TowerType type, float scale, Color
 }
 
 void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
-    // ── Asset Integration Override ───────────────────────────
-    if (def.towerType == TowerType::LASER && def.baseTier == 1 && assets) {
-        Texture2D* tex = assets->Get("Tower_Laser__Card_T1");
+    // ── Try sprite card first ────────────────────────────
+    if (assets) {
+        std::string key = GetCardTextureKey(def.towerType, def.baseTier);
+        Texture2D* tex = assets->Get(key);
         if (tex && tex->id > 0) {
-            // Draw the entire card texture
             Rectangle src = { 0, 0, (float)tex->width, (float)tex->height };
             DrawTexturePro(*tex, src, r, {0,0}, 0.0f, WHITE);
-            
-            // Keep selection highlight if selected
+
+            // Selection highlight
             if (selected) {
                 DrawRectangleLinesEx({r.x-2, r.y-2, r.width+4, r.height+4}, 3, COLOR_CARD_SEL);
             }
@@ -39,6 +58,7 @@ void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
         }
     }
 
+    // ── Procedural fallback ──────────────────────────────
     Color tierCol = GetTierAccent(def.baseTier);
     Color border = selected ? COLOR_CARD_SEL : tierCol;
     float thick = selected ? 3.0f : 1.5f;
@@ -72,15 +92,15 @@ void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
 }
 
 void Card::DrawInDraft(Rectangle r, AssetManager* assets) const {
-    // ── Asset Integration Override ───────────────────────────
-    if (def.towerType == TowerType::LASER && def.baseTier == 1 && assets) {
-        Texture2D* tex = assets->Get("Tower_Laser__Card_T1");
+    // ── Try sprite card first ────────────────────────────
+    if (assets) {
+        std::string key = GetCardTextureKey(def.towerType, def.baseTier);
+        Texture2D* tex = assets->Get(key);
         if (tex && tex->id > 0) {
-            // Draw the entire card texture
             Rectangle src = { 0, 0, (float)tex->width, (float)tex->height };
             DrawTexturePro(*tex, src, r, {0,0}, 0.0f, WHITE);
-            
-            // Keep selection highlight/text if picked
+
+            // Selection highlight
             if (draftSelected) {
                 DrawRectangleLinesEx({r.x-3, r.y-3, r.width+6, r.height+6}, 2, Fade(COLOR_CARD_SEL,0.5f));
                 DrawText("PICKED", (int)(r.x+r.width-55), (int)(r.y+8), 10, COLOR_CARD_SEL);
@@ -89,6 +109,7 @@ void Card::DrawInDraft(Rectangle r, AssetManager* assets) const {
         }
     }
 
+    // ── Procedural fallback ──────────────────────────────
     Color tierCol = GetTierAccent(def.baseTier);
     Color border = draftSelected ? COLOR_CARD_SEL : tierCol;
     float thick = draftSelected ? 3.0f : 1.5f;

@@ -43,7 +43,7 @@ public:
     // Returns true when the player closes the shop (clicks "Continue")
     bool UpdateShop(int& currency, DeckManager& deck);
 
-    void DrawShop(int currency, const DeckManager& deck) const;
+    void DrawShop(int currency, const DeckManager& deck, AssetManager* assets = nullptr) const;
 
     // ── Dependency Rule Check ────────────────────────────
     // Returns true if the player owns the required lower-tier
