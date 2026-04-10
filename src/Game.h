@@ -35,6 +35,14 @@ public:
     Camera2D camera;
     float screenShakeTimer;
 
+    // ── Animated Map Background ──────────────────────────
+    float mapAnimTimer = 0.0f;
+    int   currentMapFrame = 0;
+    static constexpr float MAP_FRAME_TIME = 0.1f;
+    static constexpr int   MAP_TOTAL_FRAMES = 12;
+    static constexpr int   MAP_FRAME_W = 1920;
+    static constexpr int   MAP_FRAME_H = 1080;
+
     // ── Audio ────────────────────────────────────────────
     Music bgMusic;
     std::vector<std::string> playlist;

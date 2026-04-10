@@ -60,6 +60,7 @@ void Game::Init() {
     assets.Load("menu_bg", "assets/start.png");
     assets.Load("hero_marine", "assets/HeroMarine.png");
     assets.Load("ult_lightning", "assets/Lightning Strike.png");
+    assets.Load("map_bg", "assets/Map.png");
     AssetManager::LoadSoundAsset("sfx_laser", "assets/laser_sound.mp3");
     AssetManager::LoadSoundAsset("sfx_missile", "assets/missile_sound.mp3");
     AssetManager::LoadSoundAsset("sfx_freeze", "assets/freeze_sound.wav");
@@ -109,6 +110,13 @@ void Game::Update(float dt) {
     }
 
     if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
+
+    // ── Animated map background timer ──────────────────
+    mapAnimTimer += dt;
+    if (mapAnimTimer >= MAP_FRAME_TIME) {
+        mapAnimTimer = 0.0f;
+        currentMapFrame = (currentMapFrame + 1) % MAP_TOTAL_FRAMES;
+    }
 
     if (state == GameState::MAIN_MENU) {
         Rectangle startBtn = { GetScreenWidth()/2.0f - 250, GetScreenHeight()/2.0f + 50, 500, 200 };
@@ -398,10 +406,19 @@ void Game::Draw() const {
     // ── Begin Camera2D (everything that shakes) ──────────
     BeginMode2D(camera);
 
-    // Stars
-    for (int i = 0; i < 80; i++) {
-        int sx=(i*137+31)%SCREEN_WIDTH, sy=(i*211+47)%GRID_HEIGHT;
-        DrawPixel(sx, sy, Fade(WHITE, 0.2f+0.15f*sinf((float)GetTime()*0.5f+i*0.7f)));
+    // ── Animated Map Background ─────────────────────────
+    Texture2D* mapTex = const_cast<AssetManager*>(&assets)->Get("map_bg");
+    if (mapTex && mapTex->id > 0) {
+        Rectangle srcMap = { (float)(currentMapFrame * MAP_FRAME_W), 0.0f,
+                             (float)MAP_FRAME_W, (float)MAP_FRAME_H };
+        Rectangle dstMap = { 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() };
+        DrawTexturePro(*mapTex, srcMap, dstMap, {0,0}, 0.0f, WHITE);
+    } else {
+        // Procedural fallback (stars)
+        for (int i = 0; i < 80; i++) {
+            int sx=(i*137+31)%SCREEN_WIDTH, sy=(i*211+47)%GRID_HEIGHT;
+            DrawPixel(sx, sy, Fade(WHITE, 0.2f+0.15f*sinf((float)GetTime()*0.5f+i*0.7f)));
+        }
     }
 
     DrawPath(); DrawGrid(); DrawPortal();
