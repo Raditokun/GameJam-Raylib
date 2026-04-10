@@ -6,7 +6,7 @@
 #include <cstdlib>
 
 Game::Game()
-    : state(GameState::DRAFTING), currency(STARTING_CURRENCY),
+    : state(GameState::MAIN_MENU), currency(STARTING_CURRENCY),
       playerHealth(hero.currentHP), camera({0}), screenShakeTimer(0)
 {
     memset(pathCells, false, sizeof(pathCells));
@@ -49,8 +49,9 @@ void Game::Init() {
     assets.Load("proj_tesla", "assets/Tesla_Partikel.png");
     assets.Load("proj_plasma", "assets/Plasma_Partikel.png");
     assets.Load("Tower_Laser__Card_T1", "assets/LaserT1Card.png");
+    assets.Load("menu_bg", "assets/start.png");
 
-    state = GameState::DRAFTING;
+    state = GameState::MAIN_MENU;
     currency = STARTING_CURRENCY;
     enemies.clear();
     projectiles.clear();
@@ -70,6 +71,14 @@ void Game::InitGrid() {
 
 void Game::Update(float dt) {
     if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
+
+    if (state == GameState::MAIN_MENU) {
+        Rectangle startBtn = { GetScreenWidth()/2.0f - 250, GetScreenHeight()/2.0f + 50, 500, 200 };
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), startBtn)) {
+            state = GameState::DRAFTING;
+        }
+        return;
+    }
 
     if (state == GameState::GAME_OVER || state == GameState::VICTORY) {
         if (IsKeyPressed(KEY_R)) Init();
@@ -276,6 +285,17 @@ void Game::DrawUltLaser() const {
 
 void Game::Draw() const {
     ClearBackground(COLOR_BG);
+
+    if (state == GameState::MAIN_MENU) {
+        Texture2D* bg = const_cast<AssetManager*>(&assets)->Get("menu_bg");
+        if (bg) {
+            Rectangle sourceRec = { 0.0f, 0.0f, (float)bg->width, (float)bg->height };
+            Rectangle destRec = { 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() };
+            Vector2 origin = { 0.0f, 0.0f };
+            DrawTexturePro(*bg, sourceRec, destRec, origin, 0.0f, WHITE);
+        }
+        return;
+    }
 
     if (state == GameState::DRAFTING) { DrawDrafting(); return; }
 

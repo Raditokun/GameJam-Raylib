@@ -39,7 +39,7 @@ constexpr float PROJECTILE_RADIUS = 4.0f;
 // ─── Enums ──────────────────────────────────────────────
 enum class TowerType  { LASER, MISSILE, FREEZE, TESLA, PLASMA };
 enum class EnemyType  { GRUNT, FAST, TANK, BOSS };
-enum class GameState  { DRAFTING, PLAYING, SHOP, GAME_OVER, VICTORY };
+enum class GameState  { MAIN_MENU, DRAFTING, PLAYING, SHOP, GAME_OVER, VICTORY };
 
 // ─── Tower Stats ────────────────────────────────────────
 struct TowerStats {
