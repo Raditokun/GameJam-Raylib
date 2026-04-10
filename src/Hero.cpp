@@ -6,7 +6,7 @@
 Hero::Hero()
     : position({0,0}), radius(20.0f),
       maxHP(STARTING_HEALTH), currentHP(STARTING_HEALTH),
-      ultCooldownMax(45.0f), ultCooldownTimer(45.0f),
+      currentUltCharge(0), maxUltCharge(100),
       ultDuration(0.5f), ultActiveTimer(0),
       ultDamage(9999.0f), ultRadius(250.0f),
       isUltFiring(false), pulseTimer(0) {}
@@ -14,7 +14,7 @@ Hero::Hero()
 void Hero::Init(Vector2 basePos) {
     position = basePos;
     currentHP = maxHP;
-    ultCooldownTimer = ultCooldownMax;
+    currentUltCharge = 0;
     ultActiveTimer = 0;
     isUltFiring = false;
     pulseTimer = 0;
@@ -23,15 +23,11 @@ void Hero::Init(Vector2 basePos) {
 void Hero::Update(float dt, bool isWaveActive) {
     pulseTimer += dt;
 
+    // Only the laser visual timer ticks down — no passive charging
     if (ultActiveTimer > 0) {
         ultActiveTimer -= dt;
         if (ultActiveTimer <= 0) {
             ultActiveTimer = 0;
-        }
-    } else if (ultCooldownTimer > 0) {
-        if (isWaveActive) {
-            ultCooldownTimer -= dt;
-            if (ultCooldownTimer < 0) ultCooldownTimer = 0;
         }
     }
 }
@@ -69,16 +65,23 @@ void Hero::Draw() const {
         float flash = 0.5f + 0.5f * sinf(pulseTimer * 12.0f);
         DrawCircleV(position, 30, Fade(COLOR_CURRENCY, 0.3f * flash));
     } else {
-        // Cooldown display
-        float pct = GetUltCooldownPercent();
-        char buf[16];
-        snprintf(buf, sizeof(buf), "ULT: %.0f%%", (1.0f - pct) * 100.0f);
+        // Charge display (kill-based)
+        float pct = GetUltChargePercent();
+        char buf[24];
+        snprintf(buf, sizeof(buf), "ULT: %d/%d", currentUltCharge, maxUltCharge);
         DrawText(buf, (int)(position.x-30), (int)(position.y+38), 9, Fade(COLOR_TEXT_DIM, 0.7f));
+
+        // Mini charge bar under hero label
+        float cbW = 40.0f, cbH = 3.0f;
+        float cbx = position.x - cbW/2, cby = position.y + 50;
+        DrawRectangle((int)cbx, (int)cby, (int)cbW, (int)cbH, CLITERAL(Color){40,40,40,180});
+        DrawRectangle((int)cbx, (int)cby, (int)(cbW * pct), (int)cbH,
+                      Fade(COLOR_CURRENCY, 0.7f));
     }
 }
 
 bool Hero::IsUltReady() const {
-    return ultCooldownTimer <= 0 && ultActiveTimer <= 0;
+    return currentUltCharge >= maxUltCharge && ultActiveTimer <= 0;
 }
 
 bool Hero::IsUltActive() const {
@@ -89,12 +92,18 @@ void Hero::FireUltimate() {
     if (!IsUltReady()) return;
     isUltFiring = true;
     ultActiveTimer = ultDuration;
-    ultCooldownTimer = ultCooldownMax;
+    currentUltCharge = 0; // drain charge on fire
 }
 
-float Hero::GetUltCooldownPercent() const {
-    if (ultCooldownMax <= 0) return 0;
-    return ultCooldownTimer / ultCooldownMax;
+void Hero::AddUltCharge(int amount) {
+    currentUltCharge += amount;
+    if (currentUltCharge > maxUltCharge)
+        currentUltCharge = maxUltCharge;
+}
+
+float Hero::GetUltChargePercent() const {
+    if (maxUltCharge <= 0) return 0;
+    return (float)currentUltCharge / (float)maxUltCharge;
 }
 
 void Hero::TakeDamage(int amount) {

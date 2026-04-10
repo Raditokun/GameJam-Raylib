@@ -109,7 +109,11 @@ void Game::Update(float dt) {
         for (auto& e : enemies) {
             if (!e.alive) continue;
             e.hp -= hero.ultDamage;
-            if (e.hp <= 0) { e.alive = false; currency += e.reward; }
+            if (e.hp <= 0) {
+                e.alive = false;
+                currency += e.reward;
+                // Ult kills do NOT grant charge (prevent infinite loop)
+            }
         }
         hero.isUltFiring = false; // damage only on first frame
     }
@@ -232,8 +236,21 @@ void Game::HandleInput() {
 void Game::UpdateProjectiles(float dt) {
     for (auto& p : projectiles) {
         p.Update(dt);
-        for (auto& e : enemies)
-            if (p.CheckCollision(e)) { if (!e.alive) currency += e.reward; break; }
+        for (auto& e : enemies) {
+            if (p.CheckCollision(e)) {
+                if (!e.alive) {
+                    currency += e.reward;
+                    // Grant ult charge based on enemy type
+                    switch (e.type) {
+                        case EnemyType::GRUNT: hero.AddUltCharge(2);  break;
+                        case EnemyType::FAST:  hero.AddUltCharge(3);  break;
+                        case EnemyType::TANK:  hero.AddUltCharge(10); break;
+                        case EnemyType::BOSS:  hero.AddUltCharge(50); break;
+                    }
+                }
+                break;
+            }
+        }
     }
 }
 
@@ -431,7 +448,7 @@ void Game::DrawUI() const {
     deck.DrawPlaying(const_cast<AssetManager*>(&assets));
     waves.Draw();
 
-    // Ult cooldown in UI
+    // Ult charge in UI (kill-based)
     if (hero.IsUltReady()) {
         float pulse = 0.6f + 0.4f * sinf((float)GetTime()*3.0f);
         DrawText("[Q] ULTIMATE READY", SCREEN_WIDTH-250, UI_PANEL_Y+75, 14,
@@ -440,11 +457,11 @@ void Game::DrawUI() const {
         DrawText("ULT ACTIVE!", SCREEN_WIDTH-200, UI_PANEL_Y+75, 14,
                  Fade(COLOR_CURRENCY, 0.9f));
     } else {
-        float pct = hero.GetUltCooldownPercent();
+        float pct = hero.GetUltChargePercent();
         DrawRectangle(SCREEN_WIDTH-250, UI_PANEL_Y+78, 120, 8, CLITERAL(Color){40,40,40,200});
-        DrawRectangle(SCREEN_WIDTH-250, UI_PANEL_Y+78, (int)(120*(1.0f-pct)), 8,
+        DrawRectangle(SCREEN_WIDTH-250, UI_PANEL_Y+78, (int)(120*pct), 8,
                       Fade(COLOR_CURRENCY, 0.5f));
-        char ubuf[32]; snprintf(ubuf, sizeof(ubuf), "ULT: %.0f%%", (1.0f-pct)*100.0f);
+        char ubuf[32]; snprintf(ubuf, sizeof(ubuf), "ULT: %d/%d", hero.currentUltCharge, hero.maxUltCharge);
         DrawText(ubuf, SCREEN_WIDTH-250, UI_PANEL_Y+90, 10, COLOR_TEXT_DIM);
     }
 

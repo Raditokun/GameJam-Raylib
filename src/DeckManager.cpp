@@ -190,3 +190,26 @@ void DeckManager::UpgradeCapacity() {
 bool DeckManager::CanUpgradeCapacity() const {
     return maxHandSize < MAX_HAND_CAP;
 }
+
+int DeckManager::SellCard(int slotIndex) {
+    if (slotIndex < 0 || slotIndex >= (int)hand.size()) return 0;
+
+    // Tier-based sell price
+    int tier = hand[slotIndex].def.baseTier;
+    int sellPrice = 0;
+    switch (tier) {
+        case 1: sellPrice = 10;  break;
+        case 2: sellPrice = 40;  break;
+        case 3: sellPrice = 90;  break;
+        default: sellPrice = 10; break;
+    }
+
+    // Remove card from hand
+    hand.erase(hand.begin() + slotIndex);
+
+    // Fix selected index
+    if (selectedHandIndex >= (int)hand.size()) selectedHandIndex = -1;
+    if (selectedHandIndex == slotIndex) selectedHandIndex = -1;
+
+    return sellPrice;
+}

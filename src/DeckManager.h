@@ -60,6 +60,7 @@ public:
     void AddCardToHand(const CardDef& def);     // push to hand + register ownership
     void UpgradeCapacity();                     // maxHandSize++, capped at MAX_HAND_CAP
     bool CanUpgradeCapacity() const;            // maxHandSize < MAX_HAND_CAP
+    int  SellCard(int slotIndex);               // remove card, return sell price (T1=$10, T2=$40, T3=$90)
 
     // ── Ownership Queries ────────────────────────────────
     void RegisterOwnership(TowerType type, int tier);

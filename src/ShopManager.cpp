@@ -96,12 +96,26 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck) {
         // ── Continue button ──────────────────────────────
         float btnW = 240, btnH = 55;
         float btnX = (SCREEN_WIDTH - btnW) / 2.0f;
-        float btnY = SCREEN_HEIGHT - 120;
+        float btnY = SCREEN_HEIGHT - 240;
         Rectangle btnRect = {btnX, btnY, btnW, btnH};
 
         if (CheckCollisionPointRec(mp, btnRect)) {
             isOpen = false;
             return true;
+        }
+    }
+
+    // ── Right-click: Sell card from hand ─────────────────
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        Vector2 mp = GetMousePosition();
+        for (int i = 0; i < (int)deck.hand.size(); i++) {
+            Rectangle r = GetHandSlotRect(i);
+            // Offset cards to shop hand area at bottom
+            r.y = SCREEN_HEIGHT - 160;
+            if (CheckCollisionPointRec(mp, r)) {
+                currency += deck.SellCard(i);
+                break;
+            }
         }
     }
 
@@ -240,7 +254,7 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck) const {
     // ── Continue Button ──────────────────────────────────
     float btnW = 240, btnH = 55;
     float btnX = (SCREEN_WIDTH - btnW) / 2.0f;
-    float btnY = SCREEN_HEIGHT - 120;
+    float btnY = SCREEN_HEIGHT - 240;
     float pulse = 0.7f + 0.3f * sinf((float)GetTime() * 3.0f);
 
     DrawRectangle((int)btnX, (int)btnY, (int)btnW, (int)btnH, Fade(COLOR_CARD_SEL, 0.2f));
@@ -249,4 +263,23 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck) const {
     int btw = MeasureText(btnTxt, 26);
     DrawText(btnTxt, (int)(btnX + btnW/2 - btw/2), (int)(btnY + 14), 26,
              Fade(COLOR_CARD_SEL, pulse));
+
+    // ── Your Hand (Sell Cards) ───────────────────────────
+    if (!deck.hand.empty()) {
+        DrawText("YOUR HAND  [Right-Click to Sell]", 20, SCREEN_HEIGHT - 190, 14, COLOR_TEXT_DIM);
+        for (int i = 0; i < (int)deck.hand.size(); i++) {
+            Rectangle r = GetHandSlotRect(i);
+            r.y = SCREEN_HEIGHT - 160;
+            deck.hand[i].DrawInHand(r);
+
+            // Sell price label
+            int tier = deck.hand[i].def.baseTier;
+            int sellPrice = (tier == 1) ? 10 : (tier == 2) ? 40 : 90;
+            char sBuf[16];
+            snprintf(sBuf, sizeof(sBuf), "SELL $%d", sellPrice);
+            int stw = MeasureText(sBuf, 9);
+            DrawText(sBuf, (int)(r.x + r.width/2 - stw/2), (int)(r.y + r.height + 4), 9,
+                     Fade(COLOR_HEALTH_BAR, 0.7f));
+        }
+    }
 }

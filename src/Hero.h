@@ -2,9 +2,8 @@
 #include <raylib.h>
 
 // ─── Hero: Replaces the basic "base" with an entity ─────
-// The Hero sits at the end of the path. It has HP (separate
-// from the old playerHealth), a visual representation, and
-// an Ultimate ability on a long cooldown.
+// The Hero sits at the end of the path. It has HP, a visual
+// representation, and a Kill-Charged Ultimate ability.
 
 class Hero {
 public:
@@ -16,9 +15,9 @@ public:
     int   maxHP;
     int   currentHP;
 
-    // ── Ultimate Ability ─────────────────────────────────
-    float ultCooldownMax;   // total cooldown in seconds (e.g. 45s)
-    float ultCooldownTimer; // counts DOWN to 0; <= 0 means ready
+    // ── Ultimate Ability (Kill-Charged) ──────────────────
+    int   currentUltCharge; // fills up from enemy kills
+    int   maxUltCharge;     // 100 = fully charged, ready to fire
     float ultDuration;      // how long the laser visual stays on screen
     float ultActiveTimer;   // counts DOWN while laser visual is showing
     float ultDamage;        // one-shot damage dealt on fire
@@ -37,8 +36,9 @@ public:
     // ── Ultimate ──────────────────────────────────────────
     bool  IsUltReady() const;
     bool  IsUltActive() const;      // true while laser visual is showing
-    void  FireUltimate();           // one-shot trigger: sets isUltFiring, resets cooldown
-    float GetUltCooldownPercent() const; // 0.0 = ready, 1.0 = full cooldown
+    void  FireUltimate();           // one-shot trigger: sets isUltFiring, drains charge
+    void  AddUltCharge(int amount); // called on enemy kill
+    float GetUltChargePercent() const; // 0.0 = empty, 1.0 = full
 
     // ── Damage ────────────────────────────────────────────
     void TakeDamage(int amount);
