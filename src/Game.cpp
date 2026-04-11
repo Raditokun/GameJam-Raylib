@@ -82,6 +82,11 @@ void Game::Init() {
     AssetManager::LoadSoundAsset("sfx_tesla", "assets/tesla_sound.MP3");
     AssetManager::LoadSoundAsset("sfx_plasma", "assets/plasma_sound.mp3");
     AssetManager::LoadSoundAsset("sfx_ult", "assets/ult_sound.mp3");
+    // ── Enemy sprite sheets ──────────────────────────────
+    assets.Load("enemy_boss",  "assets/alien_boss.png");
+    assets.Load("enemy_fast",  "assets/alien_fast.png");
+    assets.Load("enemy_grunt", "assets/alien_grunt.png");
+    assets.Load("enemy_tank",  "assets/alien_tank.png");
 
     state = GameState::MAIN_MENU;
     currency = STARTING_CURRENCY;
@@ -460,7 +465,7 @@ void Game::Draw() const {
         }
     }
 
-    for (auto& e : enemies) e.Draw();
+    for (auto& e : enemies) e.Draw(const_cast<AssetManager*>(&assets));
     for (auto& p : projectiles) p.Draw(const_cast<AssetManager*>(&assets));
 
     // Ultimate laser drawn on top of path/enemies
