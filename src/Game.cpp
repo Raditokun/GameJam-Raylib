@@ -72,6 +72,57 @@ void Game::Init() {
     assets.Load("card_plasma_t1",  "assets/PlasmaT1Card.png");
     assets.Load("card_plasma_t2",  "assets/PlasmaT2Card.png");
     assets.Load("card_plasma_t3",  "assets/PlasmaT3Card.png");
+    // ── Tower sprites (directional sprite sheets) ────────
+    // FREEZE: T1-T3, all 4 directions
+    assets.Load("tower_freeze_1_f", "assets/FREEZE T1 F.png");
+    assets.Load("tower_freeze_1_b", "assets/FREEZE T1 B.png");
+    assets.Load("tower_freeze_1_l", "assets/FREEZE T1 L.png");
+    assets.Load("tower_freeze_1_r", "assets/FREEZE T1 R.png");
+    assets.Load("tower_freeze_2_f", "assets/FREEZE T2 F.png");
+    assets.Load("tower_freeze_2_b", "assets/FREEZE T2 B.png");
+    assets.Load("tower_freeze_2_l", "assets/FREEZE T2 L.png");
+    assets.Load("tower_freeze_2_r", "assets/FREEZE T2 R.png");
+    assets.Load("tower_freeze_3_f", "assets/FREEZE T3 F.png");
+    assets.Load("tower_freeze_3_b", "assets/FREEZE T3 B.png");
+    assets.Load("tower_freeze_3_l", "assets/FREEZE T3 L.png");
+    assets.Load("tower_freeze_3_r", "assets/FREEZE T3 R.png");
+    // LASER: T1-T3, all 4 directions
+    assets.Load("tower_laser_1_f", "assets/Laser T1 F.png");
+    assets.Load("tower_laser_1_b", "assets/Laser T1 B.png");
+    assets.Load("tower_laser_1_l", "assets/Laser T1 L.png");
+    assets.Load("tower_laser_1_r", "assets/Laser T1 R.png");
+    assets.Load("tower_laser_2_f", "assets/Laser T2 F.png");
+    assets.Load("tower_laser_2_b", "assets/Laser T2 B.png");
+    assets.Load("tower_laser_2_l", "assets/Laser T2 L.png");
+    assets.Load("tower_laser_2_r", "assets/Laser T2 R.png");
+    assets.Load("tower_laser_3_f", "assets/Laser T3 F.png");
+    assets.Load("tower_laser_3_b", "assets/Laser T3 B.png");
+    assets.Load("tower_laser_3_l", "assets/Laser T3 L.png");
+    assets.Load("tower_laser_3_r", "assets/Laser T3 R.png");
+    // MISSILE: T1-T3, all 4 directions
+    assets.Load("tower_missile_1_f", "assets/MISSILE T1 F.png");
+    assets.Load("tower_missile_1_b", "assets/MISSILE T1 B.png");
+    assets.Load("tower_missile_1_l", "assets/MISSILE T1 L.png");
+    assets.Load("tower_missile_1_r", "assets/MISSILE T1 R.png");
+    assets.Load("tower_missile_2_f", "assets/MISSILE T2 F.png");
+    assets.Load("tower_missile_2_b", "assets/MISSILE T2 B.png");
+    assets.Load("tower_missile_2_l", "assets/MISSILE T2 L.png");
+    assets.Load("tower_missile_2_r", "assets/MISSILE T2 R.png");
+    assets.Load("tower_missile_3_f", "assets/MISSILE T3 F.png");
+    assets.Load("tower_missile_3_b", "assets/MISSILE T3 B.png");
+    assets.Load("tower_missile_3_l", "assets/MISSILE T3 L.png");
+    assets.Load("tower_missile_3_r", "assets/MISSILE T3 R.png");
+    // PLASMA: T1 has 4 dirs, T2/T3 base only
+    assets.Load("tower_plasma_1_f", "assets/PLASMA T1 F.png");
+    assets.Load("tower_plasma_1_b", "assets/PLASMA T1 B.png");
+    assets.Load("tower_plasma_1_l", "assets/PLASMA T1 L.png");
+    assets.Load("tower_plasma_1_r", "assets/PLASMA T1 R.png");
+    assets.Load("tower_plasma_2",   "assets/Plasma T2.png");
+    assets.Load("tower_plasma_3",   "assets/Plasma T3.png");
+    // TESLA: base only (no directional variants)
+    assets.Load("tower_tesla_1",    "assets/Tesla T1.png");
+    assets.Load("tower_tesla_2",    "assets/Tesla T2.png");
+    assets.Load("tower_tesla_3",    "assets/Tesla T3.png");
     assets.Load("menu_bg", "assets/start.png");
     assets.Load("hero_marine", "assets/HeroMarine.png");
     assets.Load("ult_lightning", "assets/Lightning Strike.png");

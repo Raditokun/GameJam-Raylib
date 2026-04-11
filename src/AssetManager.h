@@ -49,7 +49,11 @@ public:
     static void LoadSoundAsset(const std::string& key, const std::string& path);
     static Sound GetSound(const std::string& key);
 
+    // ── Static Texture Access (for classes without instance) ─
+    static Texture2D* GetTextureStatic(const std::string& key);
+
 private:
     std::map<std::string, Texture2D> textures;
     static std::map<std::string, Sound> sounds;
+    static AssetManager* instance;  // set by constructor
 };

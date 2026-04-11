@@ -14,7 +14,8 @@ constexpr float UPGRADE_COST_MULT[] = {0, 0.5f, 0.75f, 1.0f, 1.5f}; // indices 0
 Tower::Tower(TowerType t, int tier, Vector2 pos)
     : type(t), baseTier(tier), fieldLevel(1), synergyMultiplier(1.0f),
       providedDamageMultiplier(1.0f), providedFireRateBonus(0), providedRangeBonus(0),
-      position(pos), fireCooldown(0), rotation(0) {
+      position(pos), fireCooldown(0), rotation(0),
+      currentDir(FacingDir::FRONT), animTimer(0), currentFrame(0) {
     baseStats = GetTierStats(t, tier);
     RecalcSynergyContributions();
     RecalcEffectiveStats();
@@ -95,26 +96,156 @@ void Tower::Upgrade() {
     // Note: RecalcEffectiveStats is called by GridNode::CalculateSynergy() after upgrade
 }
 
+// ═══════════════════════════════════════════════════════════
+// ─── Sprite Data Dictionary ─────────────────────────────
+// Returns the AssetManager key and frame count for a given
+// tower type + tier + facing direction.
+// FALLBACK: If a direction doesn't exist, returns FRONT/base.
+// ═══════════════════════════════════════════════════════════
+SpriteData Tower::GetTowerSpriteData(TowerType type, int tier, FacingDir dir) {
+    // Direction suffix helper
+    auto dirSuffix = [](FacingDir d) -> const char* {
+        switch (d) {
+            case FacingDir::FRONT:  return "_f";
+            case FacingDir::BEHIND: return "_b";
+            case FacingDir::LEFT:   return "_l";
+            case FacingDir::RIGHT:  return "_r";
+        }
+        return "_f";
+    };
+
+    switch (type) {
+    // ── FREEZE: All tiers have all 4 directions ─────────
+    case TowerType::FREEZE: {
+        int frames = (tier == 1) ? 3 : 4; // T1=3, T2/T3=4
+        char buf[32];
+        snprintf(buf, sizeof(buf), "tower_freeze_%d%s", tier, dirSuffix(dir));
+        return { std::string(buf), frames };
+    }
+
+    // ── LASER: All tiers have all 4 directions, 6 frames ─
+    case TowerType::LASER: {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "tower_laser_%d%s", tier, dirSuffix(dir));
+        return { std::string(buf), 6 };
+    }
+
+    // ── MISSILE: All tiers have all 4 directions ────────
+    case TowerType::MISSILE: {
+        int frames = (tier == 1) ? 3 : 5; // T1=3, T2/T3=5
+        char buf[32];
+        snprintf(buf, sizeof(buf), "tower_missile_%d%s", tier, dirSuffix(dir));
+        return { std::string(buf), frames };
+    }
+
+    // ── PLASMA: T1 has 4 dirs (F/B=1fr, L/R=3fr). T2/T3 base only, 6fr ─
+    case TowerType::PLASMA: {
+        if (tier == 1) {
+            int frames;
+            if (dir == FacingDir::LEFT || dir == FacingDir::RIGHT)
+                frames = 3;
+            else
+                frames = 1; // FRONT & BEHIND are single frame
+            char buf[32];
+            snprintf(buf, sizeof(buf), "tower_plasma_1%s", dirSuffix(dir));
+            return { std::string(buf), frames };
+        } else {
+            // T2 and T3: single base sprite, 6 frames, no directional variants
+            char buf[32];
+            snprintf(buf, sizeof(buf), "tower_plasma_%d", tier);
+            return { std::string(buf), 6 };
+        }
+    }
+
+    // ── TESLA: No directional variants at all ───────────
+    case TowerType::TESLA: {
+        int frames;
+        if (tier == 1)      frames = 4;
+        else if (tier == 2) frames = 11;
+        else                frames = 5;
+        char buf[32];
+        snprintf(buf, sizeof(buf), "tower_tesla_%d", tier);
+        return { std::string(buf), frames };
+    }
+    }
+
+    // Ultimate fallback (should never hit)
+    return { "tower_laser_1_f", 6 };
+}
+
 // ─── Combat ─────────────────────────────────────────────
 void Tower::Update(float dt, std::vector<Enemy>& enemies, std::vector<Projectile>& proj) {
     fireCooldown -= dt;
     Enemy* tgt = FindTarget(enemies);
+
     if (tgt) {
-        rotation = atan2f(tgt->position.y - position.y, tgt->position.x - position.x) * RAD2DEG;
+        float dx = tgt->position.x - position.x;
+        float dy = tgt->position.y - position.y;
+        rotation = atan2f(dy, dx) * RAD2DEG;
+
+        // Determine facing direction from angle to target
+        float absDx = fabsf(dx);
+        float absDy = fabsf(dy);
+        if (absDx >= absDy) {
+            currentDir = (dx >= 0) ? FacingDir::RIGHT : FacingDir::LEFT;
+        } else {
+            currentDir = (dy >= 0) ? FacingDir::FRONT : FacingDir::BEHIND;
+        }
+
         if (fireCooldown <= 0) { Shoot(tgt, proj); fireCooldown = 1.0f / effectiveStats.fireRate; }
     }
+
+    // ── Sprite animation ─────────────────────────────────
+    SpriteData sd = GetTowerSpriteData(type, baseTier, currentDir);
+    animTimer += dt;
+    if (animTimer >= ANIM_FRAME_TIME) {
+        animTimer -= ANIM_FRAME_TIME;
+        currentFrame = (currentFrame + 1) % sd.maxFrames;
+    }
+    // Clamp in case maxFrames changed due to direction switch
+    if (currentFrame >= sd.maxFrames) currentFrame = 0;
 }
 
+// ─── Draw ───────────────────────────────────────────────
 void Tower::Draw(float yOffset) const {
     Vector2 dp = {position.x, position.y + yOffset};
-    float s = effectiveStats.spriteScale;
-    float bs = 12.0f * s;
-    DrawRectangle((int)(dp.x-bs), (int)(dp.y-bs/2), (int)(bs*2), (int)bs, Fade(GetTowerColor(type), 0.3f));
-    DrawShape(dp, s);
+
+    // ── Try sprite sheet ─────────────────────────────────
+    SpriteData sd = GetTowerSpriteData(type, baseTier, currentDir);
+    Texture2D* tex = AssetManager::GetTextureStatic(sd.key);
+
+    if (tex && tex->id > 0) {
+        float frameW = (float)tex->width / (float)sd.maxFrames;
+        float frameH = (float)tex->height;
+
+        Rectangle src = {
+            (float)currentFrame * frameW, 0,
+            frameW, frameH
+        };
+        // Dest: anchor bottom-center on the grid position
+        float scale = effectiveStats.spriteScale;
+        float dstW = frameW * scale;
+        float dstH = frameH * scale;
+        Rectangle dst = {
+            dp.x, dp.y,
+            dstW, dstH
+        };
+        // Origin at bottom-center
+        Vector2 origin = { dstW / 2.0f, dstH };
+
+        DrawTexturePro(*tex, src, dst, origin, 0.0f, WHITE);
+    } else {
+        // ── Procedural fallback ──────────────────────────
+        float s = effectiveStats.spriteScale;
+        float bs = 12.0f * s;
+        DrawRectangle((int)(dp.x-bs), (int)(dp.y-bs/2), (int)(bs*2), (int)bs, Fade(GetTowerColor(type), 0.3f));
+        DrawShape(dp, s);
+    }
 
     // Synergy indicator (glow ring if multiplier > 1)
     if (synergyMultiplier > 1.05f) {
         float pulse = 0.3f + 0.15f * sinf((float)GetTime()*3.0f);
+        float s = effectiveStats.spriteScale;
         DrawCircleLines((int)dp.x, (int)dp.y, 14*s, Fade(COLOR_CARD_SEL, pulse));
     }
 
@@ -124,6 +255,7 @@ void Tower::Draw(float yOffset) const {
         Color pipCol = (baseTier == 3) ? CLITERAL(Color){255,200,0,255} :
                         (baseTier == 2) ? CLITERAL(Color){0,200,255,255} :
                         CLITERAL(Color){200,200,200,255};
+        float s = effectiveStats.spriteScale;
         DrawRectangle((int)(px-1.5f), (int)(dp.y + 10*s + 6), 3, 3, pipCol);
     }
 }

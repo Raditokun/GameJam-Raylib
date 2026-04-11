@@ -38,9 +38,10 @@ constexpr int MAX_TIER = 3;
 constexpr float PROJECTILE_RADIUS = 4.0f;
 
 // ─── Enums ──────────────────────────────────────────────
-enum class TowerType { LASER, MISSILE, FREEZE, TESLA, PLASMA };
-enum class EnemyType { GRUNT, FAST, TANK, BOSS };
-enum class GameState { MAIN_MENU, DRAFTING, PLAYING, SHOP, GAME_OVER, VICTORY };
+enum class TowerType  { LASER, MISSILE, FREEZE, TESLA, PLASMA };
+enum class EnemyType  { GRUNT, FAST, TANK, BOSS };
+enum class GameState  { MAIN_MENU, DRAFTING, PLAYING, SHOP, GAME_OVER, VICTORY };
+enum class FacingDir  { FRONT, BEHIND, LEFT, RIGHT };
 
 // ─── Tower Stats ────────────────────────────────────────
 struct TowerStats {

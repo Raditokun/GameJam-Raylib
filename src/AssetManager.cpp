@@ -2,8 +2,9 @@
 #include <cstdio>
 
 std::map<std::string, Sound> AssetManager::sounds;
+AssetManager* AssetManager::instance = nullptr;
 
-AssetManager::AssetManager() {}
+AssetManager::AssetManager() { instance = this; }
 
 AssetManager::~AssetManager() {
     UnloadAll();
@@ -80,4 +81,9 @@ Sound AssetManager::GetSound(const std::string& key) {
         return empty;
     }
     return it->second;
+}
+
+Texture2D* AssetManager::GetTextureStatic(const std::string& key) {
+    if (!instance) return nullptr;
+    return instance->Get(key);
 }
