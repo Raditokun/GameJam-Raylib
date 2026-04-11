@@ -14,4 +14,4 @@
   - [About](#about)
 
 ## About
-bla bla bla
+Designer Semua 😂😂
