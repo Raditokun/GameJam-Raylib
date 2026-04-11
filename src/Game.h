@@ -43,6 +43,14 @@ public:
     static constexpr int   MAP_FRAME_W = 1920;
     static constexpr int   MAP_FRAME_H = 1080;
 
+    // ── Animated Main Menu ───────────────────────────────
+    Image menuGifImage;
+    Texture2D menuGifTexture;
+    int menuAnimFrames = 0;
+    int menuCurrentFrame = 0;
+    float menuFrameTimer = 0.0f;
+    const float menuFrameDelay = 0.1f;
+
     // ── Audio ────────────────────────────────────────────
     Music bgMusic;
     std::vector<std::string> playlist;

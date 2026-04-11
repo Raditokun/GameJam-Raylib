@@ -123,7 +123,8 @@ void Game::Init() {
     assets.Load("tower_tesla_1",    "assets/Tesla T1.png");
     assets.Load("tower_tesla_2",    "assets/Tesla T2.png");
     assets.Load("tower_tesla_3",    "assets/Tesla T3.png");
-    assets.Load("menu_bg", "assets/start.png");
+    menuGifImage = LoadImageAnim("assets/Main Screen.gif", &menuAnimFrames);
+    menuGifTexture = LoadTextureFromImage(menuGifImage);
     assets.Load("hero_marine", "assets/HeroMarine.png");
     assets.Load("ult_lightning", "assets/Lightning Strike.png");
     assets.Load("map_bg", "assets/Map.png");
@@ -147,6 +148,8 @@ void Game::Init() {
 
 void Game::Shutdown() {
     assets.UnloadAll();
+    UnloadTexture(menuGifTexture);
+    UnloadImage(menuGifImage);
     if (IsAudioDeviceReady()) {
         UnloadMusicStream(bgMusic);
         CloseAudioDevice();
@@ -190,8 +193,17 @@ void Game::Update(float dt) {
     }
 
     if (state == GameState::MAIN_MENU) {
-        Rectangle startBtn = { GetScreenWidth()/2.0f - 250, GetScreenHeight()/2.0f + 50, 500, 200 };
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), startBtn)) {
+        menuFrameTimer += dt;
+        if (menuFrameTimer >= menuFrameDelay) {
+            menuFrameTimer = 0.0f;
+            menuCurrentFrame = (menuCurrentFrame + 1) % menuAnimFrames;
+
+            // Calculate memory offset for the next frame and push to GPU
+            int nextFrameDataOffset = menuGifImage.width * menuGifImage.height * 4 * menuCurrentFrame;
+            UpdateTexture(menuGifTexture, ((unsigned char *)menuGifImage.data) + nextFrameDataOffset);
+        }
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             state = GameState::DRAFTING;
         }
         return;
@@ -462,12 +474,10 @@ void Game::Draw() const {
     ClearBackground(COLOR_BG);
 
     if (state == GameState::MAIN_MENU) {
-        Texture2D* bg = const_cast<AssetManager*>(&assets)->Get("menu_bg");
-        if (bg) {
-            Rectangle sourceRec = { 0.0f, 0.0f, (float)bg->width, (float)bg->height };
+        if (menuGifTexture.id > 0) {
+            Rectangle sourceRec = { 0.0f, 0.0f, (float)menuGifTexture.width, (float)menuGifTexture.height };
             Rectangle destRec = { 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() };
-            Vector2 origin = { 0.0f, 0.0f };
-            DrawTexturePro(*bg, sourceRec, destRec, origin, 0.0f, WHITE);
+            DrawTexturePro(menuGifTexture, sourceRec, destRec, {0.0f, 0.0f}, 0.0f, WHITE);
         }
         return;
     }
