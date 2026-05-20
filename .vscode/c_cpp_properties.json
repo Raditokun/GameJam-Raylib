@@ -3,7 +3,8 @@
     {
       "name": "windows-gcc-x86",
       "includePath": [
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/**",
+        "C:/raylib/raylib/src"
       ],
       "defines": [
         "_DEBUG",
@@ -12,11 +13,10 @@
         "GRAPHICS_API_OPENGL_33",
         "PLATFORM_DESKTOP"
       ],
-      "compilerPath": "C:/MinGW/bin/gcc.exe",
-      "cStandard": "${default}",
-      "cppStandard": "${default}",
-      "intelliSenseMode": "windows-gcc-x86",
-      "configurationProvider": "ms-vscode.makefile-tools"
+      "compilerPath": "C:/raylib/w64devkit/bin/g++.exe",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-gcc-x64"
     },
     {
       "name": "Mac",
