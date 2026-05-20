@@ -60,13 +60,18 @@ UDPReceiver::~UDPReceiver() {
 }
 
 bool UDPReceiver::Poll() {
-    // Default: edges are one-frame pulses, so always clear here.
-    clickPressed_  = false;
-    clickReleased_ = false;
+    // Edges are one-frame pulses — always clear at the top.
+    clickPressed_      = false;
+    clickReleased_     = false;
+    startWavePressed_  = false;
+    upgradePressed_    = false;
+    sellPressed_       = false;
+    ultPressed_        = false;
     if (!valid_) return false;
 
     bool gotPacket = false;
-    char buf[64];
+    // Generous buffer for the 7-field packet (with floats + 5 ints + commas).
+    char buf[128];
     SOCKET s = static_cast<SOCKET>(sock_);
 
     // Drain the queue — keep only the most recent values so we never lag.
@@ -83,21 +88,40 @@ bool UDPReceiver::Poll() {
         buf[n] = '\0';
 
         float nx = 0.0f, ny = 0.0f;
-        int   c  = 0;
-        if (sscanf(buf, "%f,%f,%d", &nx, &ny, &c) == 3 &&
+        int   c = 0, sw = 0, up = 0, sl = 0, ul = 0;
+        // Reject anything that is not exactly the 7-field protocol.
+        if (sscanf(buf, "%f,%f,%d,%d,%d,%d,%d",
+                   &nx, &ny, &c, &sw, &up, &sl, &ul) == 7 &&
             nx >= 0.0f && nx <= 1.0f && ny >= 0.0f && ny <= 1.0f) {
-            x_         = nx;
-            y_         = ny;
-            clickDown_ = (c != 0);
-            gotPacket  = true;
+            x_              = nx;
+            y_              = ny;
+            clickDown_      = (c  != 0);
+            startWaveDown_  = (sw != 0);
+            upgradeDown_    = (up != 0);
+            sellDown_       = (sl != 0);
+            ultDown_        = (ul != 0);
+            gotPacket       = true;
         }
     }
 
     if (gotPacket) {
         lastPacketTime_ = GetTime();
-        clickPressed_  = ( clickDown_ && !prevClickDown_);
-        clickReleased_ = (!clickDown_ &&  prevClickDown_);
-        prevClickDown_ = clickDown_;
+
+        clickPressed_     = ( clickDown_      && !prevClickDown_);
+        clickReleased_    = (!clickDown_      &&  prevClickDown_);
+        prevClickDown_    = clickDown_;
+
+        startWavePressed_ = ( startWaveDown_  && !prevStartWave_);
+        prevStartWave_    = startWaveDown_;
+
+        upgradePressed_   = ( upgradeDown_    && !prevUpgrade_);
+        prevUpgrade_      = upgradeDown_;
+
+        sellPressed_      = ( sellDown_       && !prevSell_);
+        prevSell_         = sellDown_;
+
+        ultPressed_       = ( ultDown_        && !prevUlt_);
+        prevUlt_          = ultDown_;
     }
     return gotPacket;
 }

@@ -107,8 +107,8 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck, const InputState&
         }
     }
 
-    // ── Right-click: Sell card from hand (hardware mouse only) ──
-    if (in.rightClickPressed) {
+    // ── Sell card from hand: hardware right-click OR left-hand open-palm gesture ──
+    if (in.sellPressed || in.rightClickPressed) {
         const Vector2 mp = in.cursor;
         for (int i = 0; i < (int)deck.hand.size(); i++) {
             Rectangle r = GetHandSlotRect(i);

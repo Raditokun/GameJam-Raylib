@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"/c/raylib/w64devkit/bin/mingw32-make.exe\" RAYLIB_PATH=C:/raylib/raylib PROJECT_NAME=game OBJS=src/*.cpp BUILD_MODE=DEBUG)"
+      "Bash(\"/c/raylib/w64devkit/bin/mingw32-make.exe\" RAYLIB_PATH=C:/raylib/raylib PROJECT_NAME=game OBJS=src/*.cpp BUILD_MODE=DEBUG)",
+      "Bash(python -c \"import py_compile; py_compile.compile\\('vision/tracker.py', doraise=True\\); print\\('syntax OK'\\)\")"
     ]
   }
 }

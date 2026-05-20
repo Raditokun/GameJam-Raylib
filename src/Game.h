@@ -23,6 +23,12 @@ struct InputState {
     bool clickReleased;      // edge: just went up this frame
     bool rightClickPressed;  // hardware right mouse (UDP has no right-click)
     bool udpAlive;           // true if a UDP packet arrived within ~1s
+
+    // ── Gesture-driven action edges (right/left hand) ────
+    bool startWavePressed;   // right hand: 2 fingers (index + middle)
+    bool upgradePressed;     // left  hand: 1 finger (index)
+    bool sellPressed;        // left  hand: open palm (5 fingers)
+    bool ultPressed;         // right hand: closed fist (0 fingers)
 };
 
 class Game {
@@ -108,4 +114,5 @@ private:
     void DrawGameOver() const;
     void DrawVictory() const;
     void DrawPortal() const;
+    void DrawCrosshair() const;     // virtual cursor; called from MAIN_MENU + end of Draw()
 };

@@ -304,11 +304,13 @@ void Game::UpdateShop(const InputState& in) {
 // ─── Input (PLAYING) ────────────────────────────────────
 
 void Game::HandleInput(const InputState& in) {
-    if (IsKeyPressed(KEY_SPACE) && !waves.waveActive && waves.currentWave < (int)waves.waves.size()-1)
+    // Start next wave: SPACE OR right-hand peace-sign gesture
+    if ((in.startWavePressed || IsKeyPressed(KEY_SPACE))
+        && !waves.waveActive && waves.currentWave < (int)waves.waves.size()-1)
         waves.StartNextWave();
 
-    // Hero Ultimate (Q key)
-    if (IsKeyPressed(KEY_Q) && hero.IsUltReady()) {
+    // Hero Ultimate: Q key OR right-hand closed fist
+    if ((in.ultPressed || IsKeyPressed(KEY_Q)) && hero.IsUltReady()) {
         hero.FireUltimate();
         screenShakeTimer = 0.5f; // trigger screen shake
     }
@@ -337,8 +339,8 @@ void Game::HandleInput(const InputState& in) {
         }
     }
 
-    // Right-click: sell on grid, deselect otherwise (hardware mouse — pinch carries only LMB)
-    if (in.rightClickPressed) {
+    // Sell tower (or deselect): hardware right-click OR left-hand open-palm gesture
+    if (in.sellPressed || in.rightClickPressed) {
         bool handled = false;
 
         if (mp.y < UI_PANEL_Y) {
@@ -351,8 +353,8 @@ void Game::HandleInput(const InputState& in) {
         if (!handled) deck.DeselectAll();
     }
 
-    // U key: upgrade top tower at hovered grid cell
-    if (IsKeyPressed(KEY_U)) {
+    // Upgrade top tower at hovered grid cell: U key OR left-hand index-pointing gesture
+    if (in.upgradePressed || IsKeyPressed(KEY_U)) {
         if (mp.y < UI_PANEL_Y) {
             int col = (int)(mp.x/CELL_SIZE), row = (int)(mp.y/CELL_SIZE);
             if (col>=0 && col<GRID_COLS && row>=0 && row<GRID_ROWS) {
@@ -479,6 +481,7 @@ void Game::Draw() const {
             Rectangle destRec = { 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() };
             DrawTexturePro(menuGifTexture, sourceRec, destRec, {0.0f, 0.0f}, 0.0f, WHITE);
         }
+        DrawCrosshair();
         return;
     }
 
@@ -586,16 +589,17 @@ void Game::Draw() const {
     if (state == GameState::GAME_OVER) DrawGameOver();
     if (state == GameState::VICTORY)   DrawVictory();
 
-    // ── Virtual cursor crosshair (UDP-driven hand cursor) ──
-    {
-        Vector2 c = lastInput.cursor;
-        Color col = lastInput.udpAlive ? GREEN : RED;
-        int cx = (int)c.x, cy = (int)c.y;
-        DrawCircleLines(cx, cy, 14, col);
-        DrawLine(cx - 18, cy, cx + 18, cy, col);
-        DrawLine(cx, cy - 18, cx, cy + 18, col);
-        if (lastInput.clickDown) DrawCircle(cx, cy, 6, col);
-    }
+    DrawCrosshair();
+}
+
+void Game::DrawCrosshair() const {
+    Vector2 c = lastInput.cursor;
+    Color col = lastInput.udpAlive ? GREEN : RED;
+    int cx = (int)c.x, cy = (int)c.y;
+    DrawCircleLines(cx, cy, 14, col);
+    DrawLine(cx - 18, cy, cx + 18, cy, col);
+    DrawLine(cx, cy - 18, cx, cy + 18, col);
+    if (lastInput.clickDown) DrawCircle(cx, cy, 6, col);
 }
 
 void Game::DrawDrafting() const {
