@@ -2,7 +2,7 @@
 
 |Member | Role |
 |---|---|
-|Dito| Programmer |
+|Dito| Designer |
 |Desta| Designer |
 |Weda| Designer |
 |Kemal| Designer |
