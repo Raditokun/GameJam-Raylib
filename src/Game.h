@@ -11,6 +11,20 @@
 #include "Hero.h"
 #include "AssetManager.h"
 
+// ─── Virtual input snapshot ─────────────────────────────
+// Built once per frame in main.cpp from the UDP receiver
+// (with a hardware-mouse fallback when the Python bridge
+// is silent). All previously hardware-mouse-driven UI now
+// reads from this struct instead.
+struct InputState {
+    Vector2 cursor;          // screen-space pixels
+    bool clickDown;          // currently held (pinch held)
+    bool clickPressed;       // edge: just went down this frame
+    bool clickReleased;      // edge: just went up this frame
+    bool rightClickPressed;  // hardware right mouse (UDP has no right-click)
+    bool udpAlive;           // true if a UDP packet arrived within ~1s
+};
+
 class Game {
 public:
     GameState state;
@@ -58,28 +72,32 @@ public:
     Rectangle skipBtn;
     void PlayNextTrack();
 
+    // Cached input from the most recent Update() call so that
+    // const Draw() can use it (hover highlight, crosshair, etc.).
+    InputState lastInput{};
+
     Game();
     void Init();
     void Shutdown();     // call before CloseWindow to free GPU textures
-    void Update(float dt);
+    void Update(float dt, const InputState& input);
     void Draw() const;
 
 private:
     void InitGrid();
 
     // ── Drafting ──────────────────────────────────────────
-    void UpdateDrafting();
+    void UpdateDrafting(const InputState& in);
     void DrawDrafting() const;
 
     // ── Playing ──────────────────────────────────────────
-    void HandleInput();
+    void HandleInput(const InputState& in);
     void UpdateProjectiles(float dt);
     void CheckEnemyReachedBase();
     void CleanupDead();
     void CheckWaveEndShop();
 
     // ── Shop ─────────────────────────────────────────────
-    void UpdateShop();
+    void UpdateShop(const InputState& in);
     void DrawShop() const;
 
     // ── Rendering ────────────────────────────────────────

@@ -1,6 +1,7 @@
 #include "ShopManager.h"
 #include "DeckManager.h"
 #include "AssetManager.h"
+#include "Game.h"   // for InputState
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
@@ -54,11 +55,11 @@ bool ShopManager::ShouldOpenShop(int completedWaveIndex) {
 
 // ─── Update (returns true when shop closes) ─────────────
 
-bool ShopManager::UpdateShop(int& currency, DeckManager& deck) {
+bool ShopManager::UpdateShop(int& currency, DeckManager& deck, const InputState& in) {
     if (!isOpen) return true;
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        Vector2 mp = GetMousePosition();
+    if (in.clickPressed) {
+        const Vector2 mp = in.cursor;
 
         // ── Tower item buttons ───────────────────────────
         float cardW = 200, cardH = 160, spacing = 20;
@@ -106,9 +107,9 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck) {
         }
     }
 
-    // ── Right-click: Sell card from hand ─────────────────
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-        Vector2 mp = GetMousePosition();
+    // ── Right-click: Sell card from hand (hardware mouse only) ──
+    if (in.rightClickPressed) {
+        const Vector2 mp = in.cursor;
         for (int i = 0; i < (int)deck.hand.size(); i++) {
             Rectangle r = GetHandSlotRect(i);
             // Offset cards to shop hand area at bottom

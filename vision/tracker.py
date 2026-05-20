@@ -1,15 +1,17 @@
 import cv2
+import mediapipe as mp
 import socket
 import math
-from mediapipe.solutions import hands as mp_hands_mod
-from mediapipe.solutions import drawing_utils as mp_draw_mod
+
+mp_hands_mod = mp.solutions.hands
+mp_draw_mod  = mp.solutions.drawing_utils
 
 # --- Config ---
 EMA_ALPHA       = 0.5
 CLICK_THRESHOLD = 0.05
 UDP_IP          = "127.0.0.1"
 UDP_PORT        = 5005
-DEBUG_INTERVAL  = 10
+DEBUG_INTERVAL  = 10.\
 
 # --- Init ---
 cap  = cv2.VideoCapture(0)

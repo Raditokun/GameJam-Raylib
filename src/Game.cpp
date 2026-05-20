@@ -172,13 +172,15 @@ void Game::PlayNextTrack() {
 
 // ─── Update ─────────────────────────────────────────────
 
-void Game::Update(float dt) {
+void Game::Update(float dt, const InputState& input) {
+    lastInput = input;
+
     if (IsAudioDeviceReady()) {
         UpdateMusicStream(bgMusic);
         if (GetMusicTimePlayed(bgMusic) >= GetMusicTimeLength(bgMusic)) {
             PlayNextTrack();
         }
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), skipBtn)) {
+        if (input.clickPressed && CheckCollisionPointRec(input.cursor, skipBtn)) {
             PlayNextTrack();
         }
     }
@@ -203,7 +205,7 @@ void Game::Update(float dt) {
             UpdateTexture(menuGifTexture, ((unsigned char *)menuGifImage.data) + nextFrameDataOffset);
         }
 
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (input.clickPressed) {
             state = GameState::DRAFTING;
         }
         return;
@@ -216,12 +218,12 @@ void Game::Update(float dt) {
     
     hero.Update(dt, state == GameState::PLAYING && waves.waveActive);
 
-    if (state == GameState::DRAFTING) { UpdateDrafting(); return; }
-    if (state == GameState::SHOP)    { UpdateShop(); return; }
+    if (state == GameState::DRAFTING) { UpdateDrafting(input); return; }
+    if (state == GameState::SHOP)    { UpdateShop(input); return; }
 
     // PLAYING state
-    deck.UpdatePlaying();
-    HandleInput();
+    deck.UpdatePlaying(input);
+    HandleInput(input);
     waves.Update(dt, enemies, pathPoints);
 
     for (int r=0;r<GRID_ROWS;r++)
@@ -266,13 +268,12 @@ void Game::Update(float dt) {
         state = GameState::VICTORY;
 }
 
-void Game::UpdateDrafting() {
-    deck.UpdateDrafting();
+void Game::UpdateDrafting(const InputState& in) {
+    deck.UpdateDrafting(in);
 
-    if (deck.IsDraftReady() && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    if (deck.IsDraftReady() && in.clickPressed) {
         float btnW=220, btnH=50, btnX=(SCREEN_WIDTH-btnW)/2, btnY=SCREEN_HEIGHT-100;
-        Vector2 mp = GetMousePosition();
-        if (CheckCollisionPointRec(mp, {btnX,btnY,btnW,btnH})) {
+        if (CheckCollisionPointRec(in.cursor, {btnX,btnY,btnW,btnH})) {
             deck.FinalizeDraft();
             state = GameState::PLAYING;
         }
@@ -292,8 +293,8 @@ void Game::CheckWaveEndShop() {
     }
 }
 
-void Game::UpdateShop() {
-    if (shop.UpdateShop(currency, deck)) {
+void Game::UpdateShop(const InputState& in) {
+    if (shop.UpdateShop(currency, deck, in)) {
         if (waves.currentWave < (int)waves.waves.size() - 1)
             waves.StartNextWave();
         state = GameState::PLAYING;
@@ -302,7 +303,7 @@ void Game::UpdateShop() {
 
 // ─── Input (PLAYING) ────────────────────────────────────
 
-void Game::HandleInput() {
+void Game::HandleInput(const InputState& in) {
     if (IsKeyPressed(KEY_SPACE) && !waves.waveActive && waves.currentWave < (int)waves.waves.size()-1)
         waves.StartNextWave();
 
@@ -312,9 +313,10 @@ void Game::HandleInput() {
         screenShakeTimer = 0.5f; // trigger screen shake
     }
 
+    const Vector2 mp = in.cursor;
+
     // Place tower
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && deck.HasSelection()) {
-        Vector2 mp = GetMousePosition();
+    if (in.clickPressed && deck.HasSelection()) {
         bool clickedCard = false;
         for (int i = 0; i < (int)deck.hand.size(); i++)
             if (CheckCollisionPointRec(mp, GetHandSlotRect(i))) { clickedCard = true; break; }
@@ -335,9 +337,8 @@ void Game::HandleInput() {
         }
     }
 
-    // Right-click: sell on grid, deselect otherwise
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-        Vector2 mp = GetMousePosition();
+    // Right-click: sell on grid, deselect otherwise (hardware mouse — pinch carries only LMB)
+    if (in.rightClickPressed) {
         bool handled = false;
 
         if (mp.y < UI_PANEL_Y) {
@@ -352,7 +353,6 @@ void Game::HandleInput() {
 
     // U key: upgrade top tower at hovered grid cell
     if (IsKeyPressed(KEY_U)) {
-        Vector2 mp = GetMousePosition();
         if (mp.y < UI_PANEL_Y) {
             int col = (int)(mp.x/CELL_SIZE), row = (int)(mp.y/CELL_SIZE);
             if (col>=0 && col<GRID_COLS && row>=0 && row<GRID_ROWS) {
@@ -513,7 +513,7 @@ void Game::Draw() const {
     if (deck.HasSelection()) {
         Card* card = const_cast<Game*>(this)->deck.GetSelectedCard();
         if (card) {
-            Vector2 mp = GetMousePosition();
+            Vector2 mp = lastInput.cursor;
             int hC=(int)(mp.x/CELL_SIZE), hR=(int)(mp.y/CELL_SIZE);
             for (int r=0;r<GRID_ROWS;r++) for(int c=0;c<GRID_COLS;c++) {
                 if (grid[r][c].isPathTile) continue;
@@ -534,7 +534,7 @@ void Game::Draw() const {
 
     // ── Hover Tooltip ────────────────────────────────────
     {
-        Vector2 mp = GetMousePosition();
+        Vector2 mp = lastInput.cursor;
         if (mp.y < UI_PANEL_Y && mp.y >= 0) {
             int hC = (int)(mp.x/CELL_SIZE), hR = (int)(mp.y/CELL_SIZE);
             if (hC>=0 && hC<GRID_COLS && hR>=0 && hR<GRID_ROWS && !grid[hR][hC].IsEmpty()) {
@@ -585,6 +585,17 @@ void Game::Draw() const {
 
     if (state == GameState::GAME_OVER) DrawGameOver();
     if (state == GameState::VICTORY)   DrawVictory();
+
+    // ── Virtual cursor crosshair (UDP-driven hand cursor) ──
+    {
+        Vector2 c = lastInput.cursor;
+        Color col = lastInput.udpAlive ? GREEN : RED;
+        int cx = (int)c.x, cy = (int)c.y;
+        DrawCircleLines(cx, cy, 14, col);
+        DrawLine(cx - 18, cy, cx + 18, cy, col);
+        DrawLine(cx, cy - 18, cx, cy + 18, col);
+        if (lastInput.clickDown) DrawCircle(cx, cy, 6, col);
+    }
 }
 
 void Game::DrawDrafting() const {

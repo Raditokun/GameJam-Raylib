@@ -23,6 +23,7 @@ struct ShopItem {
 };
 
 class DeckManager;          // forward declaration — no include needed
+struct InputState;
 
 class ShopManager {
 public:
@@ -41,7 +42,7 @@ public:
 
     // Called every frame while GameState::SHOP
     // Returns true when the player closes the shop (clicks "Continue")
-    bool UpdateShop(int& currency, DeckManager& deck);
+    bool UpdateShop(int& currency, DeckManager& deck, const InputState& in);
 
     void DrawShop(int currency, const DeckManager& deck, AssetManager* assets = nullptr) const;
 

@@ -309,7 +309,8 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),WINDOWS)
         # Libraries for Windows desktop compilation
         # NOTE: WinMM library required to set high-res timer resolution
-        LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm
+        # NOTE: ws2_32 required for the UDP gesture bridge (src/UDPReceiver.cpp)
+        LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm -lws2_32
         # Required for physac examples
         #LDLIBS += -static -lpthread
     endif

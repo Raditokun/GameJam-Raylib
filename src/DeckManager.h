@@ -4,6 +4,7 @@
 #include "Card.h"
 
 class AssetManager;
+struct InputState;
 
 // ─── DeckManager (Overhauled) ───────────────────────────
 // Now supports:
@@ -42,14 +43,14 @@ public:
     void InitPool();
 
     // ── Drafting (T1 only) ───────────────────────────────
-    void UpdateDrafting();
+    void UpdateDrafting(const InputState& in);
     void DrawDrafting(AssetManager* assets = nullptr) const;
     bool IsDraftReady() const;
     void FinalizeDraft();
     bool IsTierAllowedInDraft(int tier) const;  // returns true only for T1
 
     // ── Playing ──────────────────────────────────────────
-    void UpdatePlaying();
+    void UpdatePlaying(const InputState& in);
     void DrawPlaying(AssetManager* assets = nullptr) const;
     Card* GetSelectedCard();
     void DeselectAll();

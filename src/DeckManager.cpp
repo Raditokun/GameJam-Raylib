@@ -1,4 +1,5 @@
 #include "DeckManager.h"
+#include "Game.h"   // for InputState
 #include <algorithm>
 #include <cstdio>
 
@@ -37,9 +38,9 @@ bool DeckManager::IsTierAllowedInDraft(int tier) const {
     return tier == 1;
 }
 
-void DeckManager::UpdateDrafting() {
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        Vector2 mp = GetMousePosition();
+void DeckManager::UpdateDrafting(const InputState& in) {
+    if (in.clickPressed) {
+        const Vector2 mp = in.cursor;
         for (int i = 0; i < (int)pool.size(); i++) {
             Rectangle r = GetDraftSlotRect(i);
             if (CheckCollisionPointRec(mp, r)) {
@@ -124,7 +125,7 @@ void DeckManager::FinalizeDraft() {
 
 // ─── Playing ────────────────────────────────────────────
 
-void DeckManager::UpdatePlaying() {
+void DeckManager::UpdatePlaying(const InputState& in) {
     for (int i = 0; i < (int)hand.size(); i++) {
         if (IsKeyPressed(KEY_ONE + i)) {
             DeselectAll();
@@ -134,8 +135,8 @@ void DeckManager::UpdatePlaying() {
         }
     }
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        Vector2 mp = GetMousePosition();
+    if (in.clickPressed) {
+        const Vector2 mp = in.cursor;
         for (int i = 0; i < (int)hand.size(); i++) {
             Rectangle r = GetHandSlotRect(i);
             if (CheckCollisionPointRec(mp, r)) {
