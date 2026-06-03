@@ -3,57 +3,57 @@
 #include "Card.h"
 
 // ─── ShopManager ────────────────────────────────────────
-// Handles the between-wave shop screen. The shop appears
-// every SHOP_WAVE_INTERVAL waves. It offers a rotating
-// stock of T2/T3 tower cards plus a static "capacity
-// upgrade" option.
+// Menangani layar shop antar-wave. Shop muncul setiap
+// SHOP_WAVE_INTERVAL wave. Menawarkan stok kartu tower
+// T2/T3 yang berputar plus opsi "upgrade kapasitas" yang
+// tetap.
 //
-// DEPENDENCY: ShopManager receives a const pointer to the
-// player's owned cards (DeckManager::ownedTypes) to enforce
-// the tier-dependency rule. It does NOT own the DeckManager.
+// DEPENDENSI: ShopManager menerima const pointer ke kartu
+// milik pemain (DeckManager::ownedTypes) untuk menegakkan
+// aturan dependensi tier. Ia TIDAK memiliki DeckManager.
 
-constexpr int SHOP_WAVE_INTERVAL  = 3;     // shop appears every N waves
-constexpr int SHOP_STOCK_SIZE     = 4;     // number of random tower cards offered
-constexpr int CAPACITY_UPGRADE_COST = 150; // cost to add +1 hand slot
+constexpr int SHOP_WAVE_INTERVAL  = 3;     // shop muncul tiap N wave
+constexpr int SHOP_STOCK_SIZE     = 4;     // jumlah kartu tower acak yang ditawarkan
+constexpr int CAPACITY_UPGRADE_COST = 150; // biaya menambah +1 slot tangan
 
 struct ShopItem {
-    CardDef def;            // the tower card being sold
-    int     price;          // currency cost
-    bool    sold;           // true once purchased this visit
+    CardDef def;            // kartu tower yang dijual
+    int     price;          // biaya currency
+    bool    sold;           // true setelah dibeli pada kunjungan ini
 };
 
-class DeckManager;          // forward declaration — no include needed
+class DeckManager;          // deklarasi maju — tak perlu include
 struct InputState;
 
 class ShopManager {
 public:
-    // ── Stock ─────────────────────────────────────────────
-    std::vector<ShopItem> stock;       // random T2/T3 tower cards
-    bool capacityUpgradeSold;          // true if already bought this visit
+    // ── Stok ─────────────────────────────────────────────
+    std::vector<ShopItem> stock;       // kartu tower T2/T3 acak
+    bool capacityUpgradeSold;          // true jika sudah dibeli kunjungan ini
 
-    // ── State ─────────────────────────────────────────────
-    bool isOpen;                       // true while the shop screen is active
+    // ── Status ─────────────────────────────────────────────
+    bool isOpen;                       // true selama layar shop aktif
 
-    // ── Lifecycle ─────────────────────────────────────────
+    // ── Siklus Hidup ─────────────────────────────────────────
     ShopManager();
 
-    // Called when the shop opens: generate random stock
+    // Dipanggil saat shop dibuka: hasilkan stok acak
     void GenerateStock();
 
-    // Called every frame while GameState::SHOP
-    // Returns true when the player closes the shop (clicks "Continue")
+    // Dipanggil tiap frame selama GameState::SHOP
+    // Return true saat pemain menutup shop (klik "Continue")
     bool UpdateShop(int& currency, DeckManager& deck, const InputState& in);
 
     void DrawShop(int currency, const DeckManager& deck, AssetManager* assets = nullptr) const;
 
-    // ── Dependency Rule Check ────────────────────────────
-    // Returns true if the player owns the required lower-tier
-    // prerequisite for a given CardDef.
-    // e.g. T2 Plasma requires owning T1 Plasma.
-    //      T3 Plasma requires owning T2 Plasma.
-    //      T1 always returns true (no prerequisite).
+    // ── Cek Aturan Dependensi ────────────────────────────
+    // Return true jika pemain memiliki prasyarat tier lebih
+    // rendah untuk suatu CardDef.
+    // contoh T2 Plasma butuh memiliki T1 Plasma.
+    //        T3 Plasma butuh memiliki T2 Plasma.
+    //        T1 selalu return true (tanpa prasyarat).
     static bool MeetsPrerequisite(const CardDef& item, const DeckManager& deck);
 
-    // ── Helpers ───────────────────────────────────────────
-    static bool ShouldOpenShop(int completedWaveIndex);  // checks if wave# triggers shop
+    // ── Helper ───────────────────────────────────────────
+    static bool ShouldOpenShop(int completedWaveIndex);  // cek apakah nomor wave memicu shop
 };

@@ -4,26 +4,26 @@
 #include <string>
 
 // ─── AssetManager ───────────────────────────────────────
-// Centralized texture loading, caching, and cleanup.
-// All textures are stored by string key in a map.
-// Call UnloadAll() before CloseWindow() to avoid leaks.
+// Pemuatan, caching, dan pembersihan tekstur terpusat.
+// Semua tekstur disimpan per key string di sebuah map.
+// Panggil UnloadAll() sebelum CloseWindow() agar tidak bocor.
 //
-// SPRITE ORIGIN DRAWING RULES:
+// ATURAN ORIGIN GAMBAR SPRITE:
 //
-// Raylib draws textures from the TOP-LEFT corner by default.
-// Our game entities use CENTER positions. Use these formulas:
+// Secara default Raylib menggambar tekstur dari sudut KIRI-ATAS.
+// Entitas game kita memakai posisi TENGAH. Gunakan rumus ini:
 //
-//   Projectile (center-anchored):
+//   Projectile (jangkar tengah):
 //     drawX = position.x - tex.width / 2
 //     drawY = position.y - tex.height / 2
 //
-//   Tower on grid (bottom-center anchored for stacking):
+//   Tower di grid (jangkar bawah-tengah untuk stacking):
 //     drawX = position.x - tex.width / 2
 //     drawY = position.y - tex.height
-//     This anchors the sprite's bottom-center to the grid
-//     node, so vertical stacking offsets look correct.
+//     Ini menjangkar bawah-tengah sprite ke node
+//     grid, agar offset stacking vertikal terlihat benar.
 //
-//   Enemy (center-anchored):
+//   Enemy (jangkar tengah):
 //     drawX = position.x - tex.width / 2
 //     drawY = position.y - tex.height / 2
 
@@ -32,28 +32,28 @@ public:
     AssetManager();
     ~AssetManager();
 
-    // Load a texture from disk and store it under `key`.
-    // If `key` already exists, the old texture is unloaded first.
+    // Muat tekstur dari disk dan simpan dengan `key`.
+    // Jika `key` sudah ada, tekstur lama di-unload dulu.
     void Load(const std::string& key, const std::string& filepath);
 
-    // Retrieve a loaded texture by key. Returns nullptr if not found.
+    // Ambil tekstur yang sudah dimuat per key. Return nullptr jika tak ada.
     Texture2D* Get(const std::string& key);
 
-    // Returns true if the key exists and the texture is valid (id > 0).
+    // Return true jika key ada dan tekstur valid (id > 0).
     bool Has(const std::string& key) const;
 
-    // Unload all textures from GPU memory and clear the map.
+    // Unload semua tekstur dari memori GPU dan kosongkan map.
     void UnloadAll();
 
-    // ── Sounds ───────────────────────────────────────────
+    // ── Suara ───────────────────────────────────────────
     static void LoadSoundAsset(const std::string& key, const std::string& path);
     static Sound GetSound(const std::string& key);
 
-    // ── Static Texture Access (for classes without instance) ─
+    // ── Akses Tekstur Statis (untuk kelas tanpa instance) ─
     static Texture2D* GetTextureStatic(const std::string& key);
 
 private:
     std::map<std::string, Texture2D> textures;
     static std::map<std::string, Sound> sounds;
-    static AssetManager* instance;  // set by constructor
+    static AssetManager* instance;  // di-set oleh konstruktor
 };

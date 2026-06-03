@@ -1,11 +1,11 @@
 #include "Game.h"
 #include "UDPReceiver.h"
 
-// Inter-packet smoothing factor for the hand cursor. The webcam tracker runs
-// ~30 fps while the game renders at 60, so each frame we lerp the crosshair a
-// fraction of the way toward the latest UDP position for fluid motion. Python
-// already applies EMA smoothing upstream, so keep this light; raise toward 1.0
-// to effectively disable it if the cursor ever feels laggy.
+// Faktor smoothing antar-paket untuk kursor tangan. Tracker webcam berjalan
+// ~30 fps sedangkan game render di 60, jadi tiap frame crosshair di-lerp
+// sebagian menuju posisi UDP terbaru agar gerakan mulus. Python sudah
+// menerapkan smoothing EMA di hulu, jadi buat ini ringan; naikkan ke 1.0
+// untuk praktis menonaktifkannya jika kursor terasa lambat.
 constexpr float CURSOR_LERP = 0.5f;
 
 int main() {
@@ -14,7 +14,7 @@ int main() {
 
     UDPReceiver udp(5005);
 
-    // Smoothed, screen-space cursor carried across frames (starts centered).
+    // Kursor ruang-layar yang sudah dihaluskan, dibawa antar-frame (mulai di tengah).
     Vector2 smoothedCursor = { GetScreenWidth()  / 2.0f,
                                GetScreenHeight() / 2.0f };
 
@@ -28,17 +28,17 @@ int main() {
 
         if (in.udpAlive) {
             in.handPresent      = udp.HandPresent();
-            // Re-scale normalized UDP coords to the live window size every
-            // frame so resizing the Raylib window still aligns with the hand.
+            // Sesuaikan skala koordinat UDP ke ukuran window aktif tiap
+            // frame agar resize window Raylib tetap selaras dengan tangan.
             Vector2 target      = { udp.NormalizedX() * (float)GetScreenWidth(),
                                     udp.NormalizedY() * (float)GetScreenHeight() };
             if (in.handPresent) {
-                // Ease toward the latest sample for smooth, jitter-free motion.
+                // Tarik menuju sampel terbaru agar gerakan mulus tanpa jitter.
                 smoothedCursor.x += (target.x - smoothedCursor.x) * CURSOR_LERP;
                 smoothedCursor.y += (target.y - smoothedCursor.y) * CURSOR_LERP;
             } else {
-                // Hand left the frame (crosshair is being hidden) — snap so it
-                // doesn't visibly slide in from a stale spot when it returns.
+                // Tangan keluar frame (crosshair sedang disembunyikan) — snap agar
+                // tidak terlihat menggeser dari posisi lama saat tangan kembali.
                 smoothedCursor = target;
             }
             in.cursor           = smoothedCursor;
@@ -50,16 +50,16 @@ int main() {
             in.sellPressed      = udp.SellPressed();
             in.ultPressed       = udp.UltPressed();
         } else {
-            // No Python feed -> hardware mouse fallback for dev-without-camera.
-            // Flips back automatically the moment tracker.py starts broadcasting.
-            in.handPresent      = true;            // mouse cursor is always present
+            // Tidak ada data Python -> fallback ke mouse hardware untuk dev tanpa kamera.
+            // Otomatis kembali begitu tracker.py mulai mengirim siaran.
+            in.handPresent      = true;            // kursor mouse selalu dianggap ada
             smoothedCursor      = GetMousePosition();
             in.cursor           = smoothedCursor;
             in.clickDown        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
             in.clickPressed     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
             in.clickReleased    = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
-            // No mouse analog for these gestures — keyboard/right-mouse
-            // fallbacks are applied inside HandleInput via ||.
+            // Tidak ada padanan mouse untuk gestur ini — fallback keyboard/klik-kanan
+            // diterapkan di dalam HandleInput via ||.
             in.startWavePressed = false;
             in.upgradePressed   = false;
             in.sellPressed      = false;

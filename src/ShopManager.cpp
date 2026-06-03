@@ -1,28 +1,28 @@
 #include "ShopManager.h"
 #include "DeckManager.h"
 #include "AssetManager.h"
-#include "Game.h"   // for InputState
+#include "Game.h"   // untuk InputState
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
 
 ShopManager::ShopManager() : capacityUpgradeSold(false), isOpen(false) {}
 
-// ─── Stock Generation ───────────────────────────────────
+// ─── Pembuatan Stok ───────────────────────────────────
 
 void ShopManager::GenerateStock() {
     stock.clear();
     capacityUpgradeSold = false;
     isOpen = true;
 
-    // Collect all T2/T3 card defs from the global pool
+    // Kumpulkan semua def kartu T2/T3 dari pool global
     std::vector<int> candidates;
     for (int i = 0; i < POOL_SIZE; i++) {
         if (CARD_POOL[i].baseTier >= 2)
             candidates.push_back(i);
     }
 
-    // Shuffle and pick up to SHOP_STOCK_SIZE
+    // Acak dan ambil hingga SHOP_STOCK_SIZE
     for (int i = (int)candidates.size() - 1; i > 0; i--) {
         int j = rand() % (i + 1);
         int tmp = candidates[i];
@@ -38,22 +38,22 @@ void ShopManager::GenerateStock() {
     }
 }
 
-// ─── Prerequisite Check ─────────────────────────────────
+// ─── Cek Prasyarat ─────────────────────────────────
 
 bool ShopManager::MeetsPrerequisite(const CardDef& item, const DeckManager& deck) {
     if (item.baseTier <= 1) return true;
-    // Must own the tier directly below
+    // Harus memiliki tier tepat di bawahnya
     return deck.OwnsType(item.towerType, item.baseTier - 1);
 }
 
-// ─── Shop Trigger ───────────────────────────────────────
+// ─── Pemicu Shop ───────────────────────────────────────
 
 bool ShopManager::ShouldOpenShop(int completedWaveIndex) {
-    // completedWaveIndex is 0-based; wave 3 = index 2, wave 6 = index 5, etc.
+    // completedWaveIndex berbasis-0; wave 3 = indeks 2, wave 6 = indeks 5, dst.
     return (completedWaveIndex + 1) % SHOP_WAVE_INTERVAL == 0;
 }
 
-// ─── Update (returns true when shop closes) ─────────────
+// ─── Update (return true saat shop ditutup) ─────────────
 
 bool ShopManager::UpdateShop(int& currency, DeckManager& deck, const InputState& in) {
     if (!isOpen) return true;
@@ -61,7 +61,7 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck, const InputState&
     if (in.clickPressed) {
         const Vector2 mp = in.cursor;
 
-        // ── Tower item buttons ───────────────────────────
+        // ── Tombol item tower ───────────────────────────
         float cardW = 200, cardH = 160, spacing = 20;
         float totalW = stock.size() * cardW + (stock.size()-1) * spacing;
         float startX = (SCREEN_WIDTH - totalW) / 2.0f;
@@ -81,7 +81,7 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck, const InputState&
             }
         }
 
-        // ── Capacity upgrade button ──────────────────────
+        // ── Tombol upgrade kapasitas ──────────────────────
         float capBtnW = 280, capBtnH = 50;
         float capBtnX = (SCREEN_WIDTH - capBtnW) / 2.0f;
         float capBtnY = startY + cardH + 40;
@@ -95,7 +95,7 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck, const InputState&
             }
         }
 
-        // ── Continue button ──────────────────────────────
+        // ── Tombol Continue ──────────────────────────────
         float btnW = 240, btnH = 55;
         float btnX = (SCREEN_WIDTH - btnW) / 2.0f;
         float btnY = SCREEN_HEIGHT - 240;
@@ -107,12 +107,12 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck, const InputState&
         }
     }
 
-    // ── Sell card from hand: hardware right-click OR left-hand open-palm gesture ──
+    // ── Jual kartu dari tangan: klik-kanan hardware ATAU gestur telapak terbuka tangan kiri ──
     if (in.sellPressed || in.rightClickPressed) {
         const Vector2 mp = in.cursor;
         for (int i = 0; i < (int)deck.hand.size(); i++) {
             Rectangle r = GetHandSlotRect(i);
-            // Offset cards to shop hand area at bottom
+            // Geser kartu ke area tangan shop di bawah
             r.y = SCREEN_HEIGHT - 160;
             if (CheckCollisionPointRec(mp, r)) {
                 currency += deck.SellCard(i);
@@ -127,27 +127,27 @@ bool ShopManager::UpdateShop(int& currency, DeckManager& deck, const InputState&
 // ─── Draw ───────────────────────────────────────────────
 
 void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* assets) const {
-    // Background overlay
+    // Overlay latar
     DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Fade(BLACK, 0.85f));
 
-    // Title
+    // Judul
     const char* title = "TOWER SHOP";
     int tw = MeasureText(title, 48);
     DrawText(title, (SCREEN_WIDTH-tw)/2, 40, 48, COLOR_CURRENCY);
 
-    // Subtitle
+    // Subjudul
     char sub[64];
     snprintf(sub, sizeof(sub), "Currency: $%d    Hand: %d/%d", currency, (int)deck.hand.size(), deck.maxHandSize);
     int sw = MeasureText(sub, 18);
     DrawText(sub, (SCREEN_WIDTH-sw)/2, 100, 18, COLOR_TEXT_MAIN);
 
-    // ── Tower cards ──────────────────────────────────────
+    // ── Kartu tower ──────────────────────────────────────
     float cardW = 200, cardH = 160, spacing = 20;
     float totalW = stock.size() * cardW + (stock.size()-1) * spacing;
     float startX = (SCREEN_WIDTH - totalW) / 2.0f;
     float startY = 260.0f;
 
-    // Section label
+    // Label bagian
     DrawText("Available Towers (T2/T3)", (int)startX, (int)(startY - 30), 16, COLOR_TEXT_DIM);
 
     for (int i = 0; i < (int)stock.size(); i++) {
@@ -162,7 +162,7 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* 
         Color towerCol = GetTowerColor(item.def.towerType);
 
         if (item.sold) {
-            // Sold overlay
+            // Overlay terjual
             DrawRectangleRec(r, CLITERAL(Color){15, 12, 25, 240});
             DrawRectangleLinesEx(r, 1, Fade(COLOR_TEXT_DIM, 0.3f));
             const char* soldTxt = "SOLD";
@@ -170,16 +170,16 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* 
             DrawText(soldTxt, (int)(r.x + r.width/2 - stw/2), (int)(r.y + r.height/2 - 12), 24,
                      Fade(COLOR_CARD_SEL, 0.6f));
         } else {
-            // Card background
+            // Latar kartu
             DrawRectangleRec(r, canBuy ? COLOR_CARD_BG : CLITERAL(Color){20, 15, 35, 255});
             DrawRectangle((int)r.x, (int)r.y, (int)r.width, 5, tierCol);
             DrawRectangleLinesEx(r, canBuy ? 2.0f : 1.0f, canBuy ? tierCol : Fade(COLOR_TEXT_DIM, 0.4f));
 
-            // Tower name
+            // Nama tower
             DrawText(GetCardName(item.def.towerType, item.def.baseTier),
                      (int)(r.x+12), (int)(r.y+16), 14, towerCol);
 
-            // Tier label
+            // Label tier
             char tierBuf[8];
             snprintf(tierBuf, sizeof(tierBuf), "T%d", item.def.baseTier);
             DrawText(tierBuf, (int)(r.x+12), (int)(r.y+36), 12, tierCol);
@@ -192,12 +192,12 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* 
             snprintf(buf, sizeof(buf), "SPD:%.1f", s.fireRate);
             DrawText(buf, (int)(r.x+12), (int)(r.y+70), 10, COLOR_TEXT_DIM);
 
-            // Price
+            // Harga
             snprintf(buf, sizeof(buf), "$%d", item.price);
             DrawText(buf, (int)(r.x+12), (int)(r.y+92), 18,
                      canAfford ? COLOR_CURRENCY : Fade(COLOR_HEALTH_BAR, 0.8f));
 
-            // Status messages
+            // Pesan status
             if (!meetsReq) {
                 char req[48];
                 snprintf(req, sizeof(req), "REQUIRES: %s T%d",
@@ -218,7 +218,7 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* 
         }
     }
 
-    // ── Capacity Upgrade ─────────────────────────────────
+    // ── Upgrade Kapasitas ─────────────────────────────────
     float capBtnW = 280, capBtnH = 50;
     float capBtnX = (SCREEN_WIDTH - capBtnW) / 2.0f;
     float capBtnY = startY + cardH + 40;
@@ -253,7 +253,7 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* 
                  canAffordCap ? COLOR_CURRENCY : Fade(COLOR_HEALTH_BAR, 0.6f));
     }
 
-    // ── Continue Button ──────────────────────────────────
+    // ── Tombol Continue ──────────────────────────────────
     float btnW = 240, btnH = 55;
     float btnX = (SCREEN_WIDTH - btnW) / 2.0f;
     float btnY = SCREEN_HEIGHT - 240;
@@ -266,7 +266,7 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* 
     DrawText(btnTxt, (int)(btnX + btnW/2 - btw/2), (int)(btnY + 14), 26,
              Fade(COLOR_CARD_SEL, pulse));
 
-    // ── Your Hand (Sell Cards) ───────────────────────────
+    // ── Tangan Anda (Jual Kartu) ───────────────────────────
     if (!deck.hand.empty()) {
         DrawText("YOUR HAND  [Right-Click to Sell]", 20, SCREEN_HEIGHT - 190, 14, COLOR_TEXT_DIM);
         for (int i = 0; i < (int)deck.hand.size(); i++) {
@@ -274,7 +274,7 @@ void ShopManager::DrawShop(int currency, const DeckManager& deck, AssetManager* 
             r.y = SCREEN_HEIGHT - 160;
             deck.hand[i].DrawInHand(r, assets);
 
-            // Sell price label
+            // Label harga jual
             int tier = deck.hand[i].def.baseTier;
             int sellPrice = (tier == 1) ? 10 : (tier == 2) ? 40 : 90;
             char sBuf[16];

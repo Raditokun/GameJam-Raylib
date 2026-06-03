@@ -11,7 +11,7 @@ AssetManager::~AssetManager() {
 }
 
 void AssetManager::Load(const std::string& key, const std::string& filepath) {
-    // If key already exists, unload the old texture first
+    // Jika key sudah ada, unload tekstur lama dulu
     auto it = textures.find(key);
     if (it != textures.end()) {
         UnloadTexture(it->second);

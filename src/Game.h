@@ -11,32 +11,32 @@
 #include "Hero.h"
 #include "AssetManager.h"
 
-// ─── Virtual input snapshot ─────────────────────────────
-// Built once per frame in main.cpp from the UDP receiver
-// (with a hardware-mouse fallback when the Python bridge
-// is silent). All previously hardware-mouse-driven UI now
-// reads from this struct instead.
+// ─── Snapshot input virtual ─────────────────────────────
+// Dibuat sekali per frame di main.cpp dari penerima UDP
+// (dengan fallback mouse hardware saat bridge Python
+// diam). Semua UI yang dulu digerakkan mouse hardware kini
+// membaca dari struct ini.
 struct InputState {
-    Vector2 cursor;          // screen-space pixels
-    bool clickDown;          // currently held (pinch held)
-    bool clickPressed;       // edge: just went down this frame
-    bool clickReleased;      // edge: just went up this frame
-    bool rightClickPressed;  // hardware right mouse (UDP has no right-click)
-    bool udpAlive;           // true if a UDP packet arrived within ~1s
-    bool handPresent;        // true if the right (cursor) hand is in frame
+    Vector2 cursor;          // piksel ruang-layar
+    bool clickDown;          // sedang ditahan (pinch ditahan)
+    bool clickPressed;       // edge: baru ditekan di frame ini
+    bool clickReleased;      // edge: baru dilepas di frame ini
+    bool rightClickPressed;  // klik kanan mouse hardware (UDP tidak punya klik kanan)
+    bool udpAlive;           // true jika paket UDP tiba dalam ~1s
+    bool handPresent;        // true jika tangan kanan (kursor) ada di frame
 
-    // ── Gesture-driven action edges (right/left hand) ────
-    bool startWavePressed;   // right hand: 2 fingers (index + middle)
-    bool upgradePressed;     // left  hand: 1 finger (index)
-    bool sellPressed;        // left  hand: open palm (5 fingers)
-    bool ultPressed;         // right hand: closed fist (0 fingers)
+    // ── Edge aksi dari gestur (tangan kanan/kiri) ────
+    bool startWavePressed;   // tangan kanan: 2 jari (telunjuk + tengah)
+    bool upgradePressed;     // tangan kiri : 1 jari (telunjuk)
+    bool sellPressed;        // tangan kiri : telapak terbuka (5 jari)
+    bool ultPressed;         // tangan kanan: kepalan (0 jari)
 };
 
 class Game {
 public:
     GameState state;
     int currency;
-    // playerHealth is now Hero::currentHP — kept here as a convenience alias
+    // playerHealth kini Hero::currentHP — disimpan di sini sebagai alias praktis
     int& playerHealth;
 
     GridNode grid[GRID_ROWS][GRID_COLS];
@@ -56,7 +56,7 @@ public:
     Camera2D camera;
     float screenShakeTimer;
 
-    // ── Animated Map Background ──────────────────────────
+    // ── Background Map Beranimasi ──────────────────────────
     float mapAnimTimer = 0.0f;
     int   currentMapFrame = 0;
     static constexpr float MAP_FRAME_TIME = 0.1f;
@@ -64,7 +64,7 @@ public:
     static constexpr int   MAP_FRAME_W = 1920;
     static constexpr int   MAP_FRAME_H = 1080;
 
-    // ── Animated Main Menu ───────────────────────────────
+    // ── Menu Utama Beranimasi ───────────────────────────────
     Image menuGifImage;
     Texture2D menuGifTexture;
     int menuAnimFrames = 0;
@@ -79,17 +79,17 @@ public:
     Rectangle skipBtn;
     void PlayNextTrack();
 
-    // Cached input from the most recent Update() call so that
-    // const Draw() can use it (hover highlight, crosshair, etc.).
+    // Input dari panggilan Update() terakhir di-cache agar
+    // Draw() yang const bisa memakainya (hover highlight, crosshair, dll).
     InputState lastInput{};
 
-    // Crosshair visibility, eased toward 1 when the hand is present and 0 when
-    // it leaves the frame so the cursor fades in/out instead of popping.
+    // Visibilitas crosshair, ditarik ke 1 saat tangan ada dan ke 0 saat
+    // tangan keluar frame agar kursor fade in/out, bukan muncul mendadak.
     float crosshairAlpha_ = 0.0f;
 
     Game();
     void Init();
-    void Shutdown();     // call before CloseWindow to free GPU textures
+    void Shutdown();     // panggil sebelum CloseWindow untuk membebaskan tekstur GPU
     void Update(float dt, const InputState& input);
     void Draw() const;
 
@@ -114,10 +114,10 @@ private:
     // ── Rendering ────────────────────────────────────────
     void DrawGrid() const;
     void DrawPath() const;
-    void DrawUltLaser() const;      // path-tracing laser visual
+    void DrawUltLaser() const;      // visual laser penelusur jalur
     void DrawUI() const;
     void DrawGameOver() const;
     void DrawVictory() const;
     void DrawPortal() const;
-    void DrawCrosshair() const;     // virtual cursor; called from MAIN_MENU + end of Draw()
+    void DrawCrosshair() const;     // kursor virtual; dipanggil dari MAIN_MENU + akhir Draw()
 };

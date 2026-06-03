@@ -5,7 +5,7 @@
 #include <vector>
 
 
-// ─── Screen ─────────────────────────────────────────────
+// ─── Layar ─────────────────────────────────────────────
 constexpr int SCREEN_WIDTH = 1920;
 constexpr int SCREEN_HEIGHT = 1080;
 constexpr int TARGET_FPS = 60;
@@ -16,7 +16,7 @@ constexpr int GRID_ROWS = 14;
 constexpr int CELL_SIZE = 64;
 constexpr int GRID_HEIGHT = GRID_ROWS * CELL_SIZE;
 
-// ─── UI Panel ───────────────────────────────────────────
+// ─── Panel UI ───────────────────────────────────────────
 constexpr int UI_PANEL_HEIGHT = SCREEN_HEIGHT - GRID_HEIGHT;
 constexpr int UI_PANEL_Y = GRID_HEIGHT;
 constexpr int HAND_SIZE = 5;
@@ -24,7 +24,7 @@ constexpr int CARD_WIDTH = 130;
 constexpr int CARD_HEIGHT = 140;
 constexpr int CARD_SPACING = 15;
 
-// ─── Drafting UI ────────────────────────────────────────
+// ─── UI Drafting ────────────────────────────────────────
 constexpr int DRAFT_CARD_W = 140;
 constexpr int DRAFT_CARD_H = 170;
 constexpr int DRAFT_COLS = 5;
@@ -43,7 +43,7 @@ enum class EnemyType  { GRUNT, FAST, TANK, BOSS };
 enum class GameState  { MAIN_MENU, DRAFTING, PLAYING, SHOP, GAME_OVER, VICTORY };
 enum class FacingDir  { FRONT, BEHIND, LEFT, RIGHT };
 
-// ─── Tower Stats ────────────────────────────────────────
+// ─── Statistik Tower ────────────────────────────────────────
 struct TowerStats {
   float damage;
   float range;
@@ -80,7 +80,7 @@ inline TowerStats GetTierStats(TowerType type, int tier) {
   return b;
 }
 
-// ─── Enemy Stats ────────────────────────────────────────
+// ─── Statistik Musuh ────────────────────────────────────────
 struct EnemyStats {
   float hp;
   float speed;
@@ -103,7 +103,7 @@ inline EnemyStats GetBaseEnemyStats(EnemyType type) {
   }
 }
 
-// ─── Card Pool Definition ───────────────────────────────
+// ─── Definisi Pool Kartu ───────────────────────────────
 struct CardDef {
   int cardId;
   TowerType towerType;
@@ -122,13 +122,13 @@ constexpr CardDef CARD_POOL[POOL_SIZE] = {
     {14, TowerType::PLASMA, 3},
 };
 
-// ─── Path Waypoints (grid col, row) ─────────────────────
+// ─── Waypoint Jalur (kolom, baris grid) ─────────────────────
 constexpr int PATH_WP_COUNT = 10;
 constexpr int PATH_WP[PATH_WP_COUNT][2] = {{0, 6},  {6, 6},  {6, 11},  {12, 11},
                                            {12, 2}, {18, 2}, {18, 11}, {24, 11},
                                            {24, 6}, {29, 6}};
 
-// ─── Colors (Alien Neon Theme) ──────────────────────────
+// ─── Warna (Tema Alien Neon) ──────────────────────────
 #define COLOR_BG CLITERAL(Color){12, 8, 24, 255}
 #define COLOR_GRID_LINE CLITERAL(Color){40, 30, 70, 80}
 #define COLOR_VALID_CELL CLITERAL(Color){0, 255, 100, 30}
@@ -159,7 +159,7 @@ constexpr int PATH_WP[PATH_WP_COUNT][2] = {{0, 6},  {6, 6},  {6, 11},  {12, 11},
 #define COLOR_PORTAL CLITERAL(Color){150, 0, 255, 255}
 #define COLOR_DRAFT_BG CLITERAL(Color){8, 5, 18, 255}
 
-// ─── Utility ────────────────────────────────────────────
+// ─── Utilitas ────────────────────────────────────────────
 inline Color GetTowerColor(TowerType t) {
   switch (t) {
   case TowerType::LASER:
@@ -229,7 +229,7 @@ inline Color GetEnemyColor(EnemyType t) {
   }
 }
 
-// ─── Rect Helpers ───────────────────────────────────────
+// ─── Helper Rect ───────────────────────────────────────
 inline Rectangle GetHandSlotRect(int slot) {
   float totalW = HAND_SIZE * CARD_WIDTH + (HAND_SIZE - 1) * CARD_SPACING;
   float startX = (SCREEN_WIDTH - totalW) / 2.0f;

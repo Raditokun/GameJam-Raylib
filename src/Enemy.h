@@ -14,7 +14,7 @@ public:
   bool alive;
   float slowTimer, slowFactor;
 
-  // ── Animation ──────────────────────────────────────────
+  // ── Animasi ──────────────────────────────────────────
   float animTimer = 0.0f;
   int   currentFrame = 0;
   int   maxFrames = 4;

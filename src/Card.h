@@ -7,8 +7,8 @@ class AssetManager;
 class Card {
 public:
     CardDef def;
-    bool selected;       // selected in hand for placement
-    bool draftSelected;  // selected during drafting
+    bool selected;       // dipilih di tangan untuk penempatan
+    bool draftSelected;  // dipilih saat drafting
 
     Card();
     Card(CardDef definition);

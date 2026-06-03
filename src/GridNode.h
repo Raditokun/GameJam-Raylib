@@ -22,8 +22,8 @@ public:
     void DrawAll() const;
     bool IsEmpty() const;
     int  GetTopTier() const;
-    void CalculateSynergy();   // sets synergy on all towers based on tier contributions
+    void CalculateSynergy();   // set sinergi semua tower berdasarkan kontribusi tier
     bool CanUpgradeTop() const;
     int  GetTopUpgradeCost() const;
-    bool UpgradeTopTower(int& currency); // upgrades top tower if affordable, returns true on success
+    bool UpgradeTopTower(int& currency); // upgrade tower teratas jika mampu, return true bila sukses
 };
