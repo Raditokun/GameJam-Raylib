@@ -86,6 +86,7 @@ while cap.isOpened():
     upgrade     = 0
     sell        = 0
     ult         = 0
+    right_hand_present = 0   # 1 once the right (cursor) hand is seen this frame
 
     if result.multi_hand_landmarks and result.multi_handedness:
         for hand_lms, handedness in zip(result.multi_hand_landmarks,
@@ -99,6 +100,9 @@ while cap.isOpened():
             extended, n_ext = count_extended_fingers(lm, actual_label)
 
             if actual_label == "Right":
+                # The right hand drives the cursor, so its presence is what the
+                # game uses to decide whether to show or hide the crosshair.
+                right_hand_present = 1
                 # --- Cursor + click (right hand only) -------------------
                 tx, ty = lm[4].x, lm[4].y     # thumb tip
                 ix, iy = lm[8].x, lm[8].y     # index tip
@@ -128,9 +132,9 @@ while cap.isOpened():
 
             mp_draw_mod.draw_landmarks(frame, hand_lms, mp_hands_mod.HAND_CONNECTIONS)
 
-    # 7-field packet: cursor X,Y + 5 action bits
+    # 8-field packet: cursor X,Y + 5 action bits + hand-present bit
     packet = (f"{smoothed_x:.4f},{smoothed_y:.4f},"
-              f"{is_clicking},{start_wave},{upgrade},{sell},{ult}")
+              f"{is_clicking},{start_wave},{upgrade},{sell},{ult},{right_hand_present}")
     sock.sendto(packet.encode(), (UDP_IP, UDP_PORT))
 
     frame_count += 1

@@ -12,7 +12,7 @@ This is a high-performance, gesture-controlled game. The architecture is split i
 
 ## 2. The UDP Bridge Protocol
 * **One-Way Traffic:** Python sends data, C++ receives data. C++ does not need to talk back.
-* **Packet Format:** Send data as a simple, comma-separated string: `"X,Y,IS_CLICKING"`. (Example: `"0.450,0.620,1"`).
+* **Packet Format:** Send data as a simple, comma-separated string. The bridge has grown to 8 fields: `"X,Y,IS_CLICKING,START_WAVE,UPGRADE,SELL,ULT,HAND_PRESENT"`. (Example: `"0.450,0.620,1,0,0,0,0,1"`). All flags are `0`/`1`; `HAND_PRESENT` is `1` while the right (cursor) hand is in frame so the C++ client can hide the crosshair instead of freezing it. The C++ receiver strictly rejects any packet that is not exactly this field count, which keeps both halves in sync.
 * **Normalized Coordinates:** Python must send `X` and `Y` as normalized values between `0.0` and `1.0`. The C++ client will multiply these by the current Raylib screen width/height. This prevents scaling bugs if the Raylib window is resized.
 * **Non-Blocking C++:** The C++ UDP receiver MUST be configured as non-blocking. The game loop must never wait for a network packet, otherwise the game will freeze if the Python script drops a frame.
 

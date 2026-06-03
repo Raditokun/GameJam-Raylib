@@ -70,7 +70,7 @@ bool UDPReceiver::Poll() {
     if (!valid_) return false;
 
     bool gotPacket = false;
-    // Generous buffer for the 7-field packet (with floats + 5 ints + commas).
+    // Generous buffer for the 8-field packet (with floats + 6 ints + commas).
     char buf[128];
     SOCKET s = static_cast<SOCKET>(sock_);
 
@@ -88,10 +88,10 @@ bool UDPReceiver::Poll() {
         buf[n] = '\0';
 
         float nx = 0.0f, ny = 0.0f;
-        int   c = 0, sw = 0, up = 0, sl = 0, ul = 0;
-        // Reject anything that is not exactly the 7-field protocol.
-        if (sscanf(buf, "%f,%f,%d,%d,%d,%d,%d",
-                   &nx, &ny, &c, &sw, &up, &sl, &ul) == 7 &&
+        int   c = 0, sw = 0, up = 0, sl = 0, ul = 0, hp = 0;
+        // Reject anything that is not exactly the 8-field protocol.
+        if (sscanf(buf, "%f,%f,%d,%d,%d,%d,%d,%d",
+                   &nx, &ny, &c, &sw, &up, &sl, &ul, &hp) == 8 &&
             nx >= 0.0f && nx <= 1.0f && ny >= 0.0f && ny <= 1.0f) {
             x_              = nx;
             y_              = ny;
@@ -100,6 +100,7 @@ bool UDPReceiver::Poll() {
             upgradeDown_    = (up != 0);
             sellDown_       = (sl != 0);
             ultDown_        = (ul != 0);
+            handPresent_    = (hp != 0);
             gotPacket       = true;
         }
     }

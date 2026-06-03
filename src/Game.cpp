@@ -175,6 +175,13 @@ void Game::PlayNextTrack() {
 void Game::Update(float dt, const InputState& input) {
     lastInput = input;
 
+    // Ease the crosshair alpha toward present/absent every frame. This sits
+    // before any state-based early-return below so the cursor fades correctly
+    // in every screen (menu, playing, shop, ...). The fminf clamps the step so
+    // a long frame can't overshoot past the target.
+    float fadeTarget = input.handPresent ? 1.0f : 0.0f;
+    crosshairAlpha_ += (fadeTarget - crosshairAlpha_) * fminf(1.0f, 10.0f * dt);
+
     if (IsAudioDeviceReady()) {
         UpdateMusicStream(bgMusic);
         if (GetMusicTimePlayed(bgMusic) >= GetMusicTimeLength(bgMusic)) {
@@ -485,7 +492,7 @@ void Game::Draw() const {
         return;
     }
 
-    if (state == GameState::DRAFTING) { DrawDrafting(); return; }
+    if (state == GameState::DRAFTING) { DrawDrafting(); DrawCrosshair(); return; }
 
     // ── Begin Camera2D (everything that shakes) ──────────
     BeginMode2D(camera);
@@ -593,8 +600,9 @@ void Game::Draw() const {
 }
 
 void Game::DrawCrosshair() const {
+    if (crosshairAlpha_ <= 0.01f) return;   // hand out of frame — fully hidden
     Vector2 c = lastInput.cursor;
-    Color col = lastInput.udpAlive ? GREEN : RED;
+    Color col = Fade(lastInput.udpAlive ? GREEN : RED, crosshairAlpha_);
     int cx = (int)c.x, cy = (int)c.y;
     DrawCircleLines(cx, cy, 14, col);
     DrawLine(cx - 18, cy, cx + 18, cy, col);

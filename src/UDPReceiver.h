@@ -1,11 +1,13 @@
 #pragma once
 
 // Non-blocking UDP receiver for the Python vision tracker bridge.
-// Packet format (ASCII, 7 fields):
-//     "X,Y,IS_CLICKING,START_WAVE,UPGRADE,SELL,ULT"
-//   e.g. "0.4523,0.6210,1,0,0,0,0"
+// Packet format (ASCII, 8 fields):
+//     "X,Y,IS_CLICKING,START_WAVE,UPGRADE,SELL,ULT,HAND_PRESENT"
+//   e.g. "0.4523,0.6210,1,0,0,0,0,1"
 //   - X, Y are normalized to [0.0, 1.0]
 //   - All flag fields are 0 or 1.
+//   - HAND_PRESENT is 1 while the right (cursor) hand is in frame, else 0,
+//     letting the game hide the crosshair instead of freezing it in place.
 // Packets with any other field count are silently rejected (forces the Python
 // half to stay in sync).
 // Call Poll() exactly once per frame so click/gesture edge flags do not repeat.
@@ -27,6 +29,7 @@ public:
     bool  ClickDown()     const { return clickDown_; }
     bool  ClickPressed()  const { return clickPressed_; }
     bool  ClickReleased() const { return clickReleased_; }
+    bool  HandPresent()   const { return handPresent_; }
 
     // ── Gesture edges (one-frame pulses on rising edge) ─────
     bool  StartWavePressed() const { return startWavePressed_; }
@@ -46,6 +49,7 @@ private:
 
     float x_         = 0.0f;
     float y_         = 0.0f;
+    bool  handPresent_   = false;   // right (cursor) hand in frame this packet
     bool  clickDown_      = false;
     bool  clickPressed_   = false;
     bool  clickReleased_  = false;

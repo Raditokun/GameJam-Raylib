@@ -23,6 +23,7 @@ struct InputState {
     bool clickReleased;      // edge: just went up this frame
     bool rightClickPressed;  // hardware right mouse (UDP has no right-click)
     bool udpAlive;           // true if a UDP packet arrived within ~1s
+    bool handPresent;        // true if the right (cursor) hand is in frame
 
     // ── Gesture-driven action edges (right/left hand) ────
     bool startWavePressed;   // right hand: 2 fingers (index + middle)
@@ -81,6 +82,10 @@ public:
     // Cached input from the most recent Update() call so that
     // const Draw() can use it (hover highlight, crosshair, etc.).
     InputState lastInput{};
+
+    // Crosshair visibility, eased toward 1 when the hand is present and 0 when
+    // it leaves the frame so the cursor fades in/out instead of popping.
+    float crosshairAlpha_ = 0.0f;
 
     Game();
     void Init();
