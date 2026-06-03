@@ -41,7 +41,7 @@ void GridNode::DrawAll() const {
 bool GridNode::IsEmpty() const { return towerStack.empty(); }
 int  GridNode::GetTopTier() const { return towerStack.empty() ? 0 : towerStack.back().baseTier; }
 
-// ─── Upgrade Top Tower ──────────────────────────────────
+// ─── Upgrade Tower Teratas ──────────────────────────────────
 bool GridNode::CanUpgradeTop() const {
     if (towerStack.empty()) return false;
     return towerStack.back().CanUpgrade();
@@ -60,27 +60,27 @@ bool GridNode::UpgradeTopTower(int& currency) {
     if (currency < cost) return false;
     currency -= cost;
     top.Upgrade();
-    CalculateSynergy(); // Recalc entire stack since T2/T3 contributions changed
+    CalculateSynergy(); // Hitung ulang seluruh stack karena kontribusi T2/T3 berubah
     return true;
 }
 
-// ─── Synergy Calculation ────────────────────────────────
-// This is the core balancing function.
+// ─── Perhitungan Sinergi ────────────────────────────────
+// Ini fungsi balancing inti.
 //
-// PHASE 1: Gather contributions from T2 (additive) and T3 (multiplicative) towers.
-// PHASE 2: Compute base type-combo bonuses (FREEZE, TESLA+PLASMA, same-type, full evolution).
-// PHASE 3: Apply everything to each tower's effectiveStats via RecalcEffectiveStats().
+// FASE 1: Kumpulkan kontribusi dari tower T2 (aditif) dan T3 (multiplikatif).
+// FASE 2: Hitung bonus kombo tipe (FREEZE, TESLA+PLASMA, tipe sama, evolusi penuh).
+// FASE 3: Terapkan semuanya ke effectiveStats tiap tower via RecalcEffectiveStats().
 //
-// The synergyMultiplier on each tower encodes:
-//   (type-combo bonus) * (T3 damage multipliers) + (T2 additive bonuses are baked into effectiveStats directly)
+// synergyMultiplier pada tiap tower mengandung:
+//   (bonus kombo tipe) * (multiplier damage T3) + (bonus aditif T2 langsung dimasukkan ke effectiveStats)
 //
 void GridNode::CalculateSynergy() {
     if (towerStack.empty()) return;
 
-    // ── Phase 1: Tally T2 and T3 contributions ─────────
-    float stackDamageMultiplier = 1.0f;  // from T3 towers (multiplicative)
-    float stackFireRateBonus    = 0;     // from T2 towers (additive)
-    float stackRangeBonus       = 0;     // from T2 towers (additive)
+    // ── Fase 1: Hitung kontribusi T2 dan T3 ─────────
+    float stackDamageMultiplier = 1.0f;  // dari tower T3 (multiplikatif)
+    float stackFireRateBonus    = 0;     // dari tower T2 (aditif)
+    float stackRangeBonus       = 0;     // dari tower T2 (aditif)
 
     for (auto& t : towerStack) {
         if (t.baseTier == 3) {
@@ -92,7 +92,7 @@ void GridNode::CalculateSynergy() {
         }
     }
 
-    // ── Phase 2: Type-combo bonuses ─────────────────────
+    // ── Fase 2: Bonus kombo tipe ─────────────────────
     int typeCounts[5] = {0};
     bool hasFREEZE = false, hasTESLA = false, hasPLASMA = false;
     bool hasTier[4] = {false};
@@ -109,32 +109,32 @@ void GridNode::CalculateSynergy() {
     }
     bool fullEvolution = allSameType && hasTier[1] && hasTier[2] && hasTier[3];
 
-    // ── Phase 3: Apply to each tower ────────────────────
+    // ── Fase 3: Terapkan ke tiap tower ────────────────────
     for (auto& t : towerStack) {
-        // Start with type-combo multiplier
+        // Mulai dengan multiplier kombo tipe
         float comboMult = 1.0f;
 
-        // Same-type bonus: +25% per additional same-type tower
+        // Bonus tipe sama: +25% per tower tipe sama tambahan
         int sameCount = typeCounts[(int)t.type];
         if (sameCount > 1) comboMult += 0.25f * (sameCount - 1);
 
-        // FREEZE combo: non-freeze towers get +20%
+        // Kombo FREEZE: tower non-freeze dapat +20%
         if (hasFREEZE && t.type != TowerType::FREEZE) comboMult += 0.20f;
 
-        // TESLA + PLASMA combo: both get +30%
+        // Kombo TESLA + PLASMA: keduanya dapat +30%
         if (hasTESLA && hasPLASMA && (t.type == TowerType::TESLA || t.type == TowerType::PLASMA))
             comboMult += 0.30f;
 
-        // Full evolution: all 3 tiers of same type → +50%
+        // Evolusi penuh: 3 tier tipe sama → +50%
         if (fullEvolution) comboMult += 0.50f;
 
-        // Final synergy multiplier = combo * T3 amplification
+        // Multiplier sinergi akhir = kombo * amplifikasi T3
         t.synergyMultiplier = comboMult * stackDamageMultiplier;
 
-        // Recalc the tower's own effective stats (self-scaling + synergy multiplier)
+        // Hitung ulang effective stats tower (skala-diri + multiplier sinergi)
         t.RecalcEffectiveStats();
 
-        // Apply T2 additive bonuses ON TOP of self-scaling
+        // Terapkan bonus aditif T2 DI ATAS skala-diri
         t.effectiveStats.fireRate += stackFireRateBonus;
         t.effectiveStats.range    += stackRangeBonus;
     }

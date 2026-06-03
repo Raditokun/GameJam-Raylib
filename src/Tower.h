@@ -7,7 +7,7 @@
 class Enemy;
 class Projectile;
 
-// ── Sprite data returned by the directional lookup ──────
+// ── Data sprite hasil lookup berarah ──────
 struct SpriteData {
     std::string key;
     int maxFrames;
@@ -17,20 +17,20 @@ class Tower {
 public:
     TowerType  type;
     int        baseTier;
-    int        fieldLevel;           // on-field upgrade level (1-5)
-    float      synergyMultiplier;    // set by GridNode::CalculateSynergy()
+    int        fieldLevel;           // level upgrade di lapangan (1-5)
+    float      synergyMultiplier;    // di-set oleh GridNode::CalculateSynergy()
 
-    // Synergy contributions (from this tower to the stack)
-    float providedDamageMultiplier;  // T3: multiplicative damage boost to stack
-    float providedFireRateBonus;     // T2: additive fire rate bonus to stack
-    float providedRangeBonus;        // T2: additive range bonus to stack
+    // Kontribusi sinergi (dari tower ini ke stack)
+    float providedDamageMultiplier;  // T3: boost damage multiplikatif ke stack
+    float providedFireRateBonus;     // T2: bonus fire rate aditif ke stack
+    float providedRangeBonus;        // T2: bonus range aditif ke stack
 
     TowerStats baseStats;
-    TowerStats effectiveStats;       // base * synergy * level
+    TowerStats effectiveStats;       // base * sinergi * level
     Vector2    position;
     float      fireCooldown, rotation;
 
-    // ── Sprite Animation ─────────────────────────────────
+    // ── Animasi Sprite ─────────────────────────────────
     FacingDir  currentDir;
     float      animTimer;
     int        currentFrame;
@@ -43,14 +43,14 @@ public:
     void RecalcEffectiveStats();
     bool CanUpgrade() const;
     int  GetUpgradeCost() const;
-    void Upgrade();                  // increments fieldLevel, recalcs synergy contributions
+    void Upgrade();                  // menaikkan fieldLevel, hitung ulang kontribusi sinergi
 
-    // ── Sprite Lookup ────────────────────────────────────
+    // ── Lookup Sprite ────────────────────────────────────
     static SpriteData GetTowerSpriteData(TowerType type, int tier, FacingDir dir);
 
 private:
-    void RecalcSynergyContributions(); // updates provided* based on baseTier + fieldLevel
+    void RecalcSynergyContributions(); // update provided* berdasarkan baseTier + fieldLevel
     Enemy* FindTarget(std::vector<Enemy>& enemies);
     void   Shoot(Enemy* target, std::vector<Projectile>& projectiles);
-    void   DrawShape(Vector2 p, float scale) const; // procedural fallback
+    void   DrawShape(Vector2 p, float scale) const; // fallback prosedural
 };

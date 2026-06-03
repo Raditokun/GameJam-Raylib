@@ -6,10 +6,10 @@
 #include <cmath>
 #include <cstdio>
 
-// ─── Field Upgrade Constants ────────────────────────────
+// ─── Konstanta Upgrade Lapangan ────────────────────────────
 constexpr int   MAX_FIELD_LEVEL = 5;
-// Upgrade cost: base cost * multiplier per level
-constexpr float UPGRADE_COST_MULT[] = {0, 0.5f, 0.75f, 1.0f, 1.5f}; // indices 0-4 for levels 1→2, 2→3, etc.
+// Biaya upgrade: biaya base * multiplier per level
+constexpr float UPGRADE_COST_MULT[] = {0, 0.5f, 0.75f, 1.0f, 1.5f}; // indeks 0-4 untuk level 1→2, 2→3, dst.
 
 Tower::Tower(TowerType t, int tier, Vector2 pos)
     : type(t), baseTier(tier), fieldLevel(1), synergyMultiplier(1.0f),
@@ -21,51 +21,51 @@ Tower::Tower(TowerType t, int tier, Vector2 pos)
     RecalcEffectiveStats();
 }
 
-// ─── Tier-Specific Synergy Contributions ────────────────
-// Called when a tower is created or leveled up.
-// T1: No synergy contributions (grunt worker, self-only).
-// T2: Support. Additive bonuses to the stack that scale with level.
-// T3: Amplifier. Multiplicative damage boost to the stack that scales with level.
+// ─── Kontribusi Sinergi per Tier ────────────────
+// Dipanggil saat tower dibuat atau naik level.
+// T1: Tanpa kontribusi sinergi (pekerja grunt, untuk diri sendiri).
+// T2: Support. Bonus aditif ke stack yang skala dengan level.
+// T3: Amplifier. Boost damage multiplikatif ke stack yang skala dengan level.
 void Tower::RecalcSynergyContributions() {
     providedDamageMultiplier = 1.0f;
     providedFireRateBonus    = 0;
     providedRangeBonus       = 0;
 
     switch (baseTier) {
-    case 1: // T1: grunt — no stack contributions
+    case 1: // T1: grunt — tanpa kontribusi stack
         break;
-    case 2: // T2: support — additive bonuses
-        // Each level adds +10% fire rate and +15 range to all towers in the stack
+    case 2: // T2: support — bonus aditif
+        // Tiap level menambah +10% fire rate dan +15 range ke semua tower di stack
         providedFireRateBonus = 0.10f * fieldLevel;
         providedRangeBonus    = 15.0f * fieldLevel;
         break;
-    case 3: // T3: amplifier — multiplicative damage
+    case 3: // T3: amplifier — damage multiplikatif
         // Lv1: 1.2×, Lv2: 1.4×, Lv3: 1.6×, Lv4: 1.8×, Lv5: 2.0×
         providedDamageMultiplier = 1.0f + 0.2f * fieldLevel;
         break;
     }
 }
 
-// ─── Effective Stats (called by CalculateSynergy) ───────
-// synergyMultiplier is set externally by GridNode::CalculateSynergy()
-// before this method is called.
+// ─── Stats Efektif (dipanggil oleh CalculateSynergy) ───────
+// synergyMultiplier di-set dari luar oleh GridNode::CalculateSynergy()
+// sebelum method ini dipanggil.
 void Tower::RecalcEffectiveStats() {
     effectiveStats = baseStats;
 
-    // Self-scaling from field level (all tiers get some self-improvement)
+    // Skala-diri dari level lapangan (semua tier dapat sedikit peningkatan)
     float selfDmgMult, selfRateMult, selfRangeMult;
     switch (baseTier) {
-    case 1: // T1: strong self-scaling
-        selfDmgMult   = 1.0f + 0.20f * (fieldLevel - 1); // +20% dmg per level
-        selfRateMult  = 1.0f + 0.10f * (fieldLevel - 1); // +10% rate per level
-        selfRangeMult = 1.0f + 0.05f * (fieldLevel - 1); // +5% range per level
+    case 1: // T1: skala-diri kuat
+        selfDmgMult   = 1.0f + 0.20f * (fieldLevel - 1); // +20% dmg tiap level
+        selfRateMult  = 1.0f + 0.10f * (fieldLevel - 1); // +10% rate tiap level
+        selfRangeMult = 1.0f + 0.05f * (fieldLevel - 1); // +5% range tiap level
         break;
-    case 2: // T2: moderate self-scaling
+    case 2: // T2: skala-diri sedang
         selfDmgMult   = 1.0f + 0.12f * (fieldLevel - 1);
         selfRateMult  = 1.0f + 0.08f * (fieldLevel - 1);
         selfRangeMult = 1.0f + 0.04f * (fieldLevel - 1);
         break;
-    case 3: // T3: light self-scaling (power goes to the stack)
+    case 3: // T3: skala-diri ringan (kekuatan diberikan ke stack)
         selfDmgMult   = 1.0f + 0.10f * (fieldLevel - 1);
         selfRateMult  = 1.0f + 0.05f * (fieldLevel - 1);
         selfRangeMult = 1.0f + 0.03f * (fieldLevel - 1);
@@ -77,7 +77,7 @@ void Tower::RecalcEffectiveStats() {
     effectiveStats.damage   *= selfDmgMult * synergyMultiplier;
     effectiveStats.fireRate *= selfRateMult;
     effectiveStats.range    *= selfRangeMult;
-    // spriteScale grows slightly with level
+    // spriteScale tumbuh sedikit seiring level
     effectiveStats.spriteScale = baseStats.spriteScale * (1.0f + 0.05f * (fieldLevel - 1));
 }
 
@@ -93,17 +93,17 @@ void Tower::Upgrade() {
     if (fieldLevel >= MAX_FIELD_LEVEL) return;
     fieldLevel++;
     RecalcSynergyContributions();
-    // Note: RecalcEffectiveStats is called by GridNode::CalculateSynergy() after upgrade
+    // Catatan: RecalcEffectiveStats dipanggil oleh GridNode::CalculateSynergy() setelah upgrade
 }
 
 // ═══════════════════════════════════════════════════════════
-// ─── Sprite Data Dictionary ─────────────────────────────
-// Returns the AssetManager key and frame count for a given
-// tower type + tier + facing direction.
-// FALLBACK: If a direction doesn't exist, returns FRONT/base.
+// ─── Kamus Data Sprite ─────────────────────────────
+// Mengembalikan key AssetManager dan jumlah frame untuk
+// tipe tower + tier + arah hadap tertentu.
+// FALLBACK: Jika suatu arah tidak ada, kembalikan FRONT/base.
 // ═══════════════════════════════════════════════════════════
 SpriteData Tower::GetTowerSpriteData(TowerType type, int tier, FacingDir dir) {
-    // Direction suffix helper
+    // Helper suffix arah
     auto dirSuffix = [](FacingDir d) -> const char* {
         switch (d) {
             case FacingDir::FRONT:  return "_f";
@@ -115,7 +115,7 @@ SpriteData Tower::GetTowerSpriteData(TowerType type, int tier, FacingDir dir) {
     };
 
     switch (type) {
-    // ── FREEZE: All tiers have all 4 directions ─────────
+    // ── FREEZE: Semua tier punya keempat arah ─────────
     case TowerType::FREEZE: {
         int frames = (tier == 1) ? 3 : 4; // T1=3, T2/T3=4
         char buf[32];
@@ -123,14 +123,14 @@ SpriteData Tower::GetTowerSpriteData(TowerType type, int tier, FacingDir dir) {
         return { std::string(buf), frames };
     }
 
-    // ── LASER: All tiers have all 4 directions, 6 frames ─
+    // ── LASER: Semua tier punya keempat arah, 6 frame ─
     case TowerType::LASER: {
         char buf[32];
         snprintf(buf, sizeof(buf), "tower_laser_%d%s", tier, dirSuffix(dir));
         return { std::string(buf), 6 };
     }
 
-    // ── MISSILE: All tiers have all 4 directions ────────
+    // ── MISSILE: Semua tier punya keempat arah ────────
     case TowerType::MISSILE: {
         int frames = (tier == 1) ? 3 : 5; // T1=3, T2/T3=5
         char buf[32];
@@ -138,26 +138,26 @@ SpriteData Tower::GetTowerSpriteData(TowerType type, int tier, FacingDir dir) {
         return { std::string(buf), frames };
     }
 
-    // ── PLASMA: T1 has 4 dirs (F/B=1fr, L/R=3fr). T2/T3 base only, 6fr ─
+    // ── PLASMA: T1 punya 4 arah (F/B=1fr, L/R=3fr). T2/T3 base saja, 6fr ─
     case TowerType::PLASMA: {
         if (tier == 1) {
             int frames;
             if (dir == FacingDir::LEFT || dir == FacingDir::RIGHT)
                 frames = 3;
             else
-                frames = 1; // FRONT & BEHIND are single frame
+                frames = 1; // FRONT & BEHIND satu frame
             char buf[32];
             snprintf(buf, sizeof(buf), "tower_plasma_1%s", dirSuffix(dir));
             return { std::string(buf), frames };
         } else {
-            // T2 and T3: single base sprite, 6 frames, no directional variants
+            // T2 dan T3: satu sprite base, 6 frame, tanpa varian berarah
             char buf[32];
             snprintf(buf, sizeof(buf), "tower_plasma_%d", tier);
             return { std::string(buf), 6 };
         }
     }
 
-    // ── TESLA: No directional variants at all ───────────
+    // ── TESLA: Tanpa varian berarah sama sekali ───────────
     case TowerType::TESLA: {
         int frames;
         if (tier == 1)      frames = 4;
@@ -169,11 +169,11 @@ SpriteData Tower::GetTowerSpriteData(TowerType type, int tier, FacingDir dir) {
     }
     }
 
-    // Ultimate fallback (should never hit)
+    // Fallback terakhir (mestinya tak pernah terjadi)
     return { "tower_laser_1_f", 6 };
 }
 
-// ─── Combat ─────────────────────────────────────────────
+// ─── Tempur ─────────────────────────────────────────────
 void Tower::Update(float dt, std::vector<Enemy>& enemies, std::vector<Projectile>& proj) {
     fireCooldown -= dt;
     Enemy* tgt = FindTarget(enemies);
@@ -183,7 +183,7 @@ void Tower::Update(float dt, std::vector<Enemy>& enemies, std::vector<Projectile
         float dy = tgt->position.y - position.y;
         rotation = atan2f(dy, dx) * RAD2DEG;
 
-        // Determine facing direction from angle to target
+        // Tentukan arah hadap dari sudut ke target
         float absDx = fabsf(dx);
         float absDy = fabsf(dy);
         if (absDx >= absDy) {
@@ -195,14 +195,14 @@ void Tower::Update(float dt, std::vector<Enemy>& enemies, std::vector<Projectile
         if (fireCooldown <= 0) { Shoot(tgt, proj); fireCooldown = 1.0f / effectiveStats.fireRate; }
     }
 
-    // ── Sprite animation ─────────────────────────────────
+    // ── Animasi sprite ─────────────────────────────────
     SpriteData sd = GetTowerSpriteData(type, baseTier, currentDir);
     animTimer += dt;
     if (animTimer >= ANIM_FRAME_TIME) {
         animTimer -= ANIM_FRAME_TIME;
         currentFrame = (currentFrame + 1) % sd.maxFrames;
     }
-    // Clamp in case maxFrames changed due to direction switch
+    // Clamp jika maxFrames berubah karena ganti arah
     if (currentFrame >= sd.maxFrames) currentFrame = 0;
 }
 
@@ -210,7 +210,7 @@ void Tower::Update(float dt, std::vector<Enemy>& enemies, std::vector<Projectile
 void Tower::Draw(float yOffset) const {
     Vector2 dp = {position.x, position.y + yOffset};
 
-    // ── Try sprite sheet ─────────────────────────────────
+    // ── Coba sprite sheet ─────────────────────────────────
     SpriteData sd = GetTowerSpriteData(type, baseTier, currentDir);
     Texture2D* tex = AssetManager::GetTextureStatic(sd.key);
 
@@ -222,7 +222,7 @@ void Tower::Draw(float yOffset) const {
             (float)currentFrame * frameW, 0,
             frameW, frameH
         };
-        // Dest: anchor bottom-center on the grid position
+        // Dest: jangkar bawah-tengah pada posisi grid
         float scale = effectiveStats.spriteScale;
         float dstW = frameW * scale;
         float dstH = frameH * scale;
@@ -230,26 +230,26 @@ void Tower::Draw(float yOffset) const {
             dp.x, dp.y,
             dstW, dstH
         };
-        // Origin at bottom-center
+        // Origin di bawah-tengah
         Vector2 origin = { dstW / 2.0f, dstH };
 
         DrawTexturePro(*tex, src, dst, origin, 0.0f, WHITE);
     } else {
-        // ── Procedural fallback ──────────────────────────
+        // ── Fallback prosedural ──────────────────────────
         float s = effectiveStats.spriteScale;
         float bs = 12.0f * s;
         DrawRectangle((int)(dp.x-bs), (int)(dp.y-bs/2), (int)(bs*2), (int)bs, Fade(GetTowerColor(type), 0.3f));
         DrawShape(dp, s);
     }
 
-    // Synergy indicator (glow ring if multiplier > 1)
+    // Indikator sinergi (cincin glow jika multiplier > 1)
     if (synergyMultiplier > 1.05f) {
         float pulse = 0.3f + 0.15f * sinf((float)GetTime()*3.0f);
         float s = effectiveStats.spriteScale;
         DrawCircleLines((int)dp.x, (int)dp.y, 14*s, Fade(COLOR_CARD_SEL, pulse));
     }
 
-    // Level pips under tower
+    // Pip level di bawah tower
     for (int i = 0; i < fieldLevel; i++) {
         float px = dp.x + (i - (fieldLevel-1)*0.5f) * 5.0f;
         Color pipCol = (baseTier == 3) ? CLITERAL(Color){255,200,0,255} :
@@ -286,7 +286,7 @@ void Tower::DrawShape(Vector2 p, float sc) const {
         DrawCircle((int)p.x,(int)p.y, sz*0.35f, Fade(WHITE, 0.4f));
         break;
     }
-    // Tier dots (baseTier indicator)
+    // Titik tier (indikator baseTier)
     for (int i = 0; i < baseTier; i++) {
         float dx = p.x + (i - (baseTier-1)*0.5f)*6.0f;
         DrawCircle((int)dx, (int)(p.y + sz + 4), 2, Fade(c, 0.8f));

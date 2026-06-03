@@ -1,13 +1,13 @@
 #include "UDPReceiver.h"
 
-// raylib must be included BEFORE winsock2.h so that raylib's `Rectangle`
-// struct and `DrawText` function are declared before <windows.h> turns
-// those identifiers into macros (via wingdi.h / winuser.h).
+// raylib harus di-include SEBELUM winsock2.h agar struct `Rectangle` dan
+// fungsi `DrawText` milik raylib dideklarasikan sebelum <windows.h> mengubah
+// identifier tersebut menjadi macro (via wingdi.h / winuser.h).
 #include <raylib.h>   // TraceLog, GetTime
 
 #define WIN32_LEAN_AND_MEAN
-#define NOGDI         // skip wingdi.h (still defines Rectangle macro otherwise)
-#define NOUSER        // skip winuser.h (DrawText macro)
+#define NOGDI         // lewati wingdi.h (jika tidak, macro Rectangle tetap didefinisikan)
+#define NOUSER        // lewati winuser.h (macro DrawText)
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <cstdio>
@@ -60,7 +60,7 @@ UDPReceiver::~UDPReceiver() {
 }
 
 bool UDPReceiver::Poll() {
-    // Edges are one-frame pulses — always clear at the top.
+    // Edge adalah pulsa satu frame — selalu reset di awal.
     clickPressed_      = false;
     clickReleased_     = false;
     startWavePressed_  = false;
@@ -70,11 +70,11 @@ bool UDPReceiver::Poll() {
     if (!valid_) return false;
 
     bool gotPacket = false;
-    // Generous buffer for the 8-field packet (with floats + 6 ints + commas).
+    // Buffer berlebih untuk paket 8-field (float + 6 int + koma).
     char buf[128];
     SOCKET s = static_cast<SOCKET>(sock_);
 
-    // Drain the queue — keep only the most recent values so we never lag.
+    // Kuras antrian — simpan hanya nilai terbaru agar tidak pernah tertinggal.
     while (true) {
         int n = recvfrom(s, buf, (int)sizeof(buf) - 1, 0, nullptr, nullptr);
         if (n == SOCKET_ERROR) {
@@ -89,7 +89,7 @@ bool UDPReceiver::Poll() {
 
         float nx = 0.0f, ny = 0.0f;
         int   c = 0, sw = 0, up = 0, sl = 0, ul = 0, hp = 0;
-        // Reject anything that is not exactly the 8-field protocol.
+        // Tolak apa pun yang bukan tepat protokol 8-field.
         if (sscanf(buf, "%f,%f,%d,%d,%d,%d,%d,%d",
                    &nx, &ny, &c, &sw, &up, &sl, &ul, &hp) == 8 &&
             nx >= 0.0f && nx <= 1.0f && ny >= 0.0f && ny <= 1.0f) {

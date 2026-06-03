@@ -30,26 +30,26 @@ void Hero::Init(Vector2 basePos) {
 void Hero::Update(float dt, bool isWaveActive) {
     pulseTimer += dt;
 
-    // ── Idle sprite animation ────────────────────────────
+    // ── Animasi sprite idle ────────────────────────────
     animTimer += dt;
     if (animTimer >= FRAME_TIME) {
         animTimer -= FRAME_TIME;
         currentFrame = (currentFrame + 1) % IDLE_FRAMES;
     }
 
-    // ── Ultimate visual timer ────────────────────────────
+    // ── Timer visual ultimate ────────────────────────────
     if (ultActiveTimer > 0) {
         ultActiveTimer -= dt;
         if (ultActiveTimer <= 0) {
             ultActiveTimer = 0;
         }
 
-        // Ult sprite animation (right-to-left, then loop 2→0)
+        // Animasi sprite ult (kanan-ke-kiri, lalu loop 2→0)
         ultAnimTimer += dt;
         if (ultAnimTimer >= ULT_FRAME_TIME) {
             ultAnimTimer -= ULT_FRAME_TIME;
             currentUltFrame--;
-            // After initial 9→0 sweep, loop the last 3 frames (2, 1, 0)
+            // Setelah sapuan awal 9→0, loop 3 frame terakhir (2, 1, 0)
             if (currentUltFrame < 0) {
                 currentUltFrame = 2;
             }
@@ -58,16 +58,16 @@ void Hero::Update(float dt, bool isWaveActive) {
 }
 
 void Hero::Draw(AssetManager* assets) const {
-    // ── Try sprite sheet first ───────────────────────────
+    // ── Coba sprite sheet dulu ───────────────────────────
     if (assets) {
         Texture2D* tex = assets->Get("hero_marine");
         if (tex && tex->id > 0) {
-            // Source rect: pick current frame from horizontal strip
+            // Source rect: ambil frame saat ini dari strip horizontal
             Rectangle src = {
                 (float)(currentFrame * SPRITE_SIZE), 0,
                 (float)SPRITE_SIZE, (float)SPRITE_SIZE
             };
-            // Dest rect: centered on hero position
+            // Dest rect: dipusatkan pada posisi hero
             Rectangle dst = {
                 position.x, position.y,
                 (float)SPRITE_SIZE, (float)SPRITE_SIZE
@@ -75,7 +75,7 @@ void Hero::Draw(AssetManager* assets) const {
             Vector2 origin = { SPRITE_SIZE / 2.0f, SPRITE_SIZE / 2.0f };
             DrawTexturePro(*tex, src, dst, origin, 0.0f, WHITE);
 
-            // HP bar above hero
+            // Bar HP di atas hero
             float barW = 40.0f, barH = 5.0f;
             float hpRatio = (float)currentHP / (float)maxHP;
             float bx = position.x - barW/2, by = position.y - 40;
@@ -83,7 +83,7 @@ void Hero::Draw(AssetManager* assets) const {
             DrawRectangle((int)bx, (int)by, (int)(barW * hpRatio), (int)barH,
                           hpRatio > 0.5f ? COLOR_BASE : COLOR_HEALTH_BAR);
 
-            // Ult indicator
+            // Indikator ult
             if (IsUltReady()) {
                 float pulse = 0.5f + 0.5f * sinf(pulseTimer * 4.0f);
                 DrawCircleLines((int)position.x, (int)position.y, 36, Fade(COLOR_CURRENCY, pulse));
@@ -104,11 +104,11 @@ void Hero::Draw(AssetManager* assets) const {
                 DrawRectangle((int)cbx, (int)cby, (int)(cbW * pct), (int)cbH,
                               Fade(COLOR_CURRENCY, 0.7f));
             }
-            return; // sprite drawn, skip procedural fallback
+            return; // sprite tergambar, lewati fallback prosedural
         }
     }
 
-    // ── Procedural fallback (no sprite) ──────────────────
+    // ── Fallback prosedural (tanpa sprite) ──────────────────
     float p = 1.0f + 0.08f * sinf(pulseTimer * 2.0f);
 
     DrawCircleV(position, 28*p, Fade(COLOR_BASE, 0.15f));
@@ -159,8 +159,8 @@ void Hero::FireUltimate() {
     if (!IsUltReady()) return;
     isUltFiring = true;
     ultActiveTimer = ultDuration;
-    currentUltCharge = 0; // drain charge on fire
-    // Reset ult animation to start from frame 9 (right-to-left sweep)
+    currentUltCharge = 0; // kuras charge saat fire
+    // Reset animasi ult agar mulai dari frame 9 (sapuan kanan-ke-kiri)
     currentUltFrame = 9;
     ultAnimTimer = 0.0f;
 }

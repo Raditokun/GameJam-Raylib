@@ -2,8 +2,8 @@
 #include <raylib.h>
 #include "Constants.h"
 
-class Enemy; // forward declare
-class AssetManager; // forward declare
+class Enemy; // deklarasi maju
+class AssetManager; // deklarasi maju
 
 class Projectile {
 public:

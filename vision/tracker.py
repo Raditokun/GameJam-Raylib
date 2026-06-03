@@ -6,14 +6,14 @@ import math
 mp_hands_mod = mp.solutions.hands
 mp_draw_mod  = mp.solutions.drawing_utils
 
-# --- Config ---
+# --- Konfigurasi ---
 EMA_ALPHA       = 0.5
 CLICK_THRESHOLD = 0.05
 UDP_IP          = "127.0.0.1"
 UDP_PORT        = 5005
 DEBUG_INTERVAL  = 10
 
-# MediaPipe landmark indices (per the official hand model)
+# Indeks landmark MediaPipe
 #   Thumb : MCP=2, IP=3,   Tip=4
 #   Index : MCP=5, PIP=6,  Tip=8
 #   Middle: MCP=9, PIP=10, Tip=12
@@ -24,35 +24,33 @@ FINGER_PIPS = {            "index": 6, "middle": 10, "ring": 14, "pinky": 18}
 
 
 def count_extended_fingers(lm, actual_hand_label):
-    """Return (extended_set, count). `lm` is a list of normalized landmarks.
+    """Hitung jari terbuka. Kembalikan (set jari, jumlah).
 
-    `actual_hand_label` is the USER-perspective label ("Left" / "Right") *after*
-    we have already compensated for the cv2.flip(frame, 1) mirror — see main loop.
-    The thumb test uses it to pick the correct sideways direction.
+    `actual_hand_label` = tangan asli user setelah frame di-mirror.
+    Dipakai untuk menentukan arah jempol.
     """
     extended = set()
 
-    # Non-thumb fingers: tip is above (smaller y) the PIP joint when extended.
+    # Jari biasa: terbuka kalau ujung di atas sendi PIP.
     for name in ("index", "middle", "ring", "pinky"):
         if lm[FINGER_TIPS[name]].y < lm[FINGER_PIPS[name]].y:
             extended.add(name)
 
-    # Thumb: tip lies sideways relative to the IP joint. Direction depends on
-    # which hand we're looking at (mirror-corrected).
+    # Jempol: terbuka kalau ujung ke samping sendi IP (arah ikut tangan).
     thumb_tip_x = lm[4].x
     thumb_ip_x  = lm[3].x
     if actual_hand_label == "Right":
-        # User's right hand: thumb extends to the LEFT in the (already-mirrored) image
+        # Tangan kanan: jempol ke kiri di layar (sudah di-mirror).
         if thumb_tip_x < thumb_ip_x:
             extended.add("thumb")
-    else:  # Left hand
+    else:  # Tangan kiri
         if thumb_tip_x > thumb_ip_x:
             extended.add("thumb")
 
     return extended, len(extended)
 
 
-# --- Init ---
+# --- Inisialisasi ---
 cap  = cv2.VideoCapture(0)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -76,63 +74,61 @@ while cap.isOpened():
     if not ok:
         break
 
-    frame  = cv2.flip(frame, 1)   # mirror — MediaPipe handedness will need swapping below
+    frame  = cv2.flip(frame, 1)   # mirror — label tangan ditukar di bawah
     rgb    = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     result = hands.process(rgb)
 
-    # Per-frame outputs (default off)
+    # Nilai default tiap frame
     is_clicking = 0
     start_wave  = 0
     upgrade     = 0
     sell        = 0
     ult         = 0
-    right_hand_present = 0   # 1 once the right (cursor) hand is seen this frame
+    right_hand_present = 0   # 1 kalau tangan kanan terlihat
 
     if result.multi_hand_landmarks and result.multi_handedness:
         for hand_lms, handedness in zip(result.multi_hand_landmarks,
                                         result.multi_handedness):
-            mp_label = handedness.classification[0].label  # "Left" or "Right"
-            # Since the frame was mirrored before processing, MediaPipe's label
-            # is the OPPOSITE of the user's actual hand. Swap it.
+            mp_label = handedness.classification[0].label  # "Left" atau "Right"
+            # Frame di-mirror, jadi label MediaPipe kebalik — tukar.
             actual_label = "Right" if mp_label == "Left" else "Left"
 
             lm = hand_lms.landmark
             extended, n_ext = count_extended_fingers(lm, actual_label)
 
             if actual_label == "Right":
-                # The right hand drives the cursor, so its presence is what the
-                # game uses to decide whether to show or hide the crosshair.
+                # Tangan kanan = kursor; ada/tidaknya untuk tampil/sembunyi crosshair.
                 right_hand_present = 1
-                # --- Cursor + click (right hand only) -------------------
-                tx, ty = lm[4].x, lm[4].y     # thumb tip
-                ix, iy = lm[8].x, lm[8].y     # index tip
+                # --- Kursor + klik (hanya tangan kanan) -------------------
+                tx, ty = lm[4].x, lm[4].y     # ujung jempol
+                ix, iy = lm[8].x, lm[8].y     # ujung telunjuk
                 dist = math.sqrt((ix - tx) ** 2 + (iy - ty) ** 2)
                 is_clicking = 1 if dist < CLICK_THRESHOLD else 0
 
-                # EMA smoothing on index tip
+                # Haluskan posisi telunjuk (EMA)
                 smoothed_x = EMA_ALPHA * ix + (1.0 - EMA_ALPHA) * smoothed_x
                 smoothed_y = EMA_ALPHA * iy + (1.0 - EMA_ALPHA) * smoothed_y
 
-                # --- Action gestures (right hand) ------------------------
-                # Peace sign: exactly index + middle, nothing else.
+                # --- Gestur aksi (tangan kanan) ------------------------
+                # Peace sign: telunjuk + tengah saja.
                 if n_ext == 2 and extended == {"index", "middle"}:
                     start_wave = 1
-                # Closed fist: nothing extended.
+                # Kepalan: tidak ada jari terbuka.
                 if n_ext == 0:
                     ult = 1
 
-            else:  # Left hand
-                # --- Action gestures (left hand) -------------------------
-                # Pointing: exactly the index finger.
+            else:  # Tangan kiri
+                # --- Gestur aksi (tangan kiri) -------------------------
+                # Menunjuk: telunjuk saja.
                 if n_ext == 1 and "index" in extended:
                     upgrade = 1
-                # Open palm: all five fingers.
+                # Telapak terbuka: kelima jari.
                 if n_ext == 5:
                     sell = 1
 
             mp_draw_mod.draw_landmarks(frame, hand_lms, mp_hands_mod.HAND_CONNECTIONS)
 
-    # 8-field packet: cursor X,Y + 5 action bits + hand-present bit
+    # Paket 8 field: X,Y + 5 aksi + hand-present
     packet = (f"{smoothed_x:.4f},{smoothed_y:.4f},"
               f"{is_clicking},{start_wave},{upgrade},{sell},{ult},{right_hand_present}")
     sock.sendto(packet.encode(), (UDP_IP, UDP_PORT))

@@ -1,5 +1,5 @@
 #include "DeckManager.h"
-#include "Game.h"   // for InputState
+#include "Game.h"   // untuk InputState
 #include <algorithm>
 #include <cstdio>
 
@@ -18,7 +18,7 @@ void DeckManager::InitPool() {
         pool.emplace_back(CARD_POOL[i]);
 }
 
-// ─── Ownership ──────────────────────────────────────────
+// ─── Kepemilikan ──────────────────────────────────────────
 
 int DeckManager::EncodeOwnership(TowerType type, int tier) {
     return (int)type * 10 + tier;
@@ -32,7 +32,7 @@ bool DeckManager::OwnsType(TowerType type, int tier) const {
     return ownedTiers.count(EncodeOwnership(type, tier)) > 0;
 }
 
-// ─── Drafting (T1 only) ─────────────────────────────────
+// ─── Drafting (hanya T1) ─────────────────────────────────
 
 bool DeckManager::IsTierAllowedInDraft(int tier) const {
     return tier == 1;
@@ -44,7 +44,7 @@ void DeckManager::UpdateDrafting(const InputState& in) {
         for (int i = 0; i < (int)pool.size(); i++) {
             Rectangle r = GetDraftSlotRect(i);
             if (CheckCollisionPointRec(mp, r)) {
-                // Only allow T1 cards in draft
+                // Hanya izinkan kartu T1 di draft
                 if (!IsTierAllowedInDraft(pool[i].def.baseTier)) break;
 
                 if (pool[i].draftSelected) {
@@ -71,7 +71,7 @@ void DeckManager::DrawDrafting(AssetManager* assets) const {
     DrawText(sub, (SCREEN_WIDTH-sw)/2, 80, 18,
              (int)draftPicks.size() == maxHandSize ? COLOR_CARD_SEL : COLOR_TEXT_DIM);
 
-    // Column headers
+    // Header kolom
     for (int col = 0; col < DRAFT_COLS; col++) {
         Rectangle first = GetDraftSlotRect(col * 3);
         const char* name = GetTowerName(CARD_POOL[col*3].towerType);
@@ -80,11 +80,11 @@ void DeckManager::DrawDrafting(AssetManager* assets) const {
         DrawText(name, (int)(first.x + first.width/2 - nw/2), (int)(first.y - 20), 14, tc);
     }
 
-    // Draw pool cards — grey out non-T1
+    // Gambar kartu pool — abukan yang non-T1
     for (int i = 0; i < (int)pool.size(); i++) {
         Rectangle r = GetDraftSlotRect(i);
         if (!IsTierAllowedInDraft(pool[i].def.baseTier)) {
-            // Locked card
+            // Kartu terkunci
             DrawRectangleRec(r, CLITERAL(Color){20, 15, 35, 255});
             DrawRectangleLinesEx(r, 1, Fade(COLOR_TEXT_DIM, 0.3f));
             DrawText("LOCKED", (int)(r.x + r.width/2 - 28), (int)(r.y + r.height/2 - 6), 12, Fade(COLOR_TEXT_DIM, 0.5f));
@@ -93,7 +93,7 @@ void DeckManager::DrawDrafting(AssetManager* assets) const {
         }
     }
 
-    // START button
+    // Tombol START
     if (IsDraftReady()) {
         float btnW = 220, btnH = 50;
         float btnX = (SCREEN_WIDTH - btnW) / 2;
@@ -168,7 +168,7 @@ void DeckManager::DeselectAll() {
 
 bool DeckManager::HasSelection() const { return selectedHandIndex >= 0; }
 
-// ─── Shop Integration ───────────────────────────────────
+// ─── Integrasi Shop ───────────────────────────────────
 
 bool DeckManager::CanAddCard() const {
     return (int)hand.size() < maxHandSize;
@@ -195,7 +195,7 @@ bool DeckManager::CanUpgradeCapacity() const {
 int DeckManager::SellCard(int slotIndex) {
     if (slotIndex < 0 || slotIndex >= (int)hand.size()) return 0;
 
-    // Tier-based sell price
+    // Harga jual berbasis tier
     int tier = hand[slotIndex].def.baseTier;
     int sellPrice = 0;
     switch (tier) {
@@ -205,10 +205,10 @@ int DeckManager::SellCard(int slotIndex) {
         default: sellPrice = 10; break;
     }
 
-    // Remove card from hand
+    // Hapus kartu dari tangan
     hand.erase(hand.begin() + slotIndex);
 
-    // Fix selected index
+    // Perbaiki indeks terpilih
     if (selectedHandIndex >= (int)hand.size()) selectedHandIndex = -1;
     if (selectedHandIndex == slotIndex) selectedHandIndex = -1;
 

@@ -18,7 +18,7 @@ void Game::Init() {
         SetTargetFPS(TARGET_FPS);
     }
 
-    // Build path
+    // Bangun jalur
     pathPoints.clear();
     for (int i = 0; i < PATH_WP_COUNT; i++)
         pathPoints.push_back({(float)(PATH_WP[i][0]*CELL_SIZE+CELL_SIZE/2),(float)(PATH_WP[i][1]*CELL_SIZE+CELL_SIZE/2)});
@@ -35,14 +35,14 @@ void Game::Init() {
     waves.Init();
     hero.Init(pathPoints.back());
 
-    // Camera init
+    // Inisialisasi kamera
     camera.offset = {0, 0};
     camera.target = {0, 0};
     camera.rotation = 0;
     camera.zoom = 1.0f;
     screenShakeTimer = 0;
 
-    // ── Load Assets (must be after window init) ──────────
+    // ── Muat Aset (harus setelah window init) ──────────
     if (!IsAudioDeviceReady()) {
         InitAudioDevice();
         playlist = { "assets/bg/1.MP3", "assets/bg/2.MP3", "assets/bg/3.MP3", "assets/bg/4.MP3", "assets/bg/5.MP3" };
@@ -56,7 +56,7 @@ void Game::Init() {
     assets.Load("proj_freeze", "assets/frezze_partikel.png");
     assets.Load("proj_tesla", "assets/Tesla_Partikel.png");
     assets.Load("proj_plasma", "assets/Plasma_Partikel.png");
-    // ── Card sprites (5 types × 3 tiers) ─────────────────
+    // ── Sprite kartu (5 tipe × 3 tier) ─────────────────
     assets.Load("card_laser_t1",   "assets/LaserT1Card.png");
     assets.Load("card_laser_t2",   "assets/LaserT2Card.png");
     assets.Load("card_laser_t3",   "assets/LaserT3Card.png");
@@ -72,8 +72,8 @@ void Game::Init() {
     assets.Load("card_plasma_t1",  "assets/PlasmaT1Card.png");
     assets.Load("card_plasma_t2",  "assets/PlasmaT2Card.png");
     assets.Load("card_plasma_t3",  "assets/PlasmaT3Card.png");
-    // ── Tower sprites (directional sprite sheets) ────────
-    // FREEZE: T1-T3, all 4 directions
+    // ── Sprite tower (sprite sheet berarah) ────────
+    // FREEZE: T1-T3, keempat arah
     assets.Load("tower_freeze_1_f", "assets/FREEZE T1 F.png");
     assets.Load("tower_freeze_1_b", "assets/FREEZE T1 B.png");
     assets.Load("tower_freeze_1_l", "assets/FREEZE T1 L.png");
@@ -86,7 +86,7 @@ void Game::Init() {
     assets.Load("tower_freeze_3_b", "assets/FREEZE T3 B.png");
     assets.Load("tower_freeze_3_l", "assets/FREEZE T3 L.png");
     assets.Load("tower_freeze_3_r", "assets/FREEZE T3 R.png");
-    // LASER: T1-T3, all 4 directions
+    // LASER: T1-T3, keempat arah
     assets.Load("tower_laser_1_f", "assets/Laser T1 F.png");
     assets.Load("tower_laser_1_b", "assets/Laser T1 B.png");
     assets.Load("tower_laser_1_l", "assets/Laser T1 L.png");
@@ -99,7 +99,7 @@ void Game::Init() {
     assets.Load("tower_laser_3_b", "assets/Laser T3 B.png");
     assets.Load("tower_laser_3_l", "assets/Laser T3 L.png");
     assets.Load("tower_laser_3_r", "assets/Laser T3 R.png");
-    // MISSILE: T1-T3, all 4 directions
+    // MISSILE: T1-T3, keempat arah
     assets.Load("tower_missile_1_f", "assets/MISSILE T1 F.png");
     assets.Load("tower_missile_1_b", "assets/MISSILE T1 B.png");
     assets.Load("tower_missile_1_l", "assets/MISSILE T1 L.png");
@@ -112,14 +112,14 @@ void Game::Init() {
     assets.Load("tower_missile_3_b", "assets/MISSILE T3 B.png");
     assets.Load("tower_missile_3_l", "assets/MISSILE T3 L.png");
     assets.Load("tower_missile_3_r", "assets/MISSILE T3 R.png");
-    // PLASMA: T1 has 4 dirs, T2/T3 base only
+    // PLASMA: T1 punya 4 arah, T2/T3 base saja
     assets.Load("tower_plasma_1_f", "assets/PLASMA T1 F.png");
     assets.Load("tower_plasma_1_b", "assets/PLASMA T1 B.png");
     assets.Load("tower_plasma_1_l", "assets/PLASMA T1 L.png");
     assets.Load("tower_plasma_1_r", "assets/PLASMA T1 R.png");
     assets.Load("tower_plasma_2",   "assets/Plasma T2.png");
     assets.Load("tower_plasma_3",   "assets/Plasma T3.png");
-    // TESLA: base only (no directional variants)
+    // TESLA: base saja (tanpa varian berarah)
     assets.Load("tower_tesla_1",    "assets/Tesla T1.png");
     assets.Load("tower_tesla_2",    "assets/Tesla T2.png");
     assets.Load("tower_tesla_3",    "assets/Tesla T3.png");
@@ -134,7 +134,7 @@ void Game::Init() {
     AssetManager::LoadSoundAsset("sfx_tesla", "assets/tesla_sound.MP3");
     AssetManager::LoadSoundAsset("sfx_plasma", "assets/plasma_sound.mp3");
     AssetManager::LoadSoundAsset("sfx_ult", "assets/ult_sound.mp3");
-    // ── Enemy sprite sheets ──────────────────────────────
+    // ── Sprite sheet musuh ──────────────────────────────
     assets.Load("enemy_boss",  "assets/alien_boss.png");
     assets.Load("enemy_fast",  "assets/alien_fast.png");
     assets.Load("enemy_grunt", "assets/alien_grunt.png");
@@ -175,10 +175,10 @@ void Game::PlayNextTrack() {
 void Game::Update(float dt, const InputState& input) {
     lastInput = input;
 
-    // Ease the crosshair alpha toward present/absent every frame. This sits
-    // before any state-based early-return below so the cursor fades correctly
-    // in every screen (menu, playing, shop, ...). The fminf clamps the step so
-    // a long frame can't overshoot past the target.
+    // Tarik alpha crosshair menuju ada/tidak tiap frame. Ini diletakkan
+    // sebelum early-return berbasis state di bawah agar kursor fade dengan benar
+    // di semua layar (menu, playing, shop, ...). fminf membatasi langkah agar
+    // frame yang panjang tidak melampaui target.
     float fadeTarget = input.handPresent ? 1.0f : 0.0f;
     crosshairAlpha_ += (fadeTarget - crosshairAlpha_) * fminf(1.0f, 10.0f * dt);
 
@@ -194,7 +194,7 @@ void Game::Update(float dt, const InputState& input) {
 
     if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
 
-    // ── Animated map background timer ──────────────────
+    // ── Timer background map beranimasi ──────────────────
     mapAnimTimer += dt;
     if (mapAnimTimer >= MAP_FRAME_TIME) {
         mapAnimTimer = 0.0f;
@@ -207,7 +207,7 @@ void Game::Update(float dt, const InputState& input) {
             menuFrameTimer = 0.0f;
             menuCurrentFrame = (menuCurrentFrame + 1) % menuAnimFrames;
 
-            // Calculate memory offset for the next frame and push to GPU
+            // Hitung offset memori untuk frame berikutnya lalu kirim ke GPU
             int nextFrameDataOffset = menuGifImage.width * menuGifImage.height * 4 * menuCurrentFrame;
             UpdateTexture(menuGifTexture, ((unsigned char *)menuGifImage.data) + nextFrameDataOffset);
         }
@@ -222,13 +222,13 @@ void Game::Update(float dt, const InputState& input) {
         if (IsKeyPressed(KEY_R)) Init();
         return;
     }
-    
+
     hero.Update(dt, state == GameState::PLAYING && waves.waveActive);
 
     if (state == GameState::DRAFTING) { UpdateDrafting(input); return; }
     if (state == GameState::SHOP)    { UpdateShop(input); return; }
 
-    // PLAYING state
+    // State PLAYING
     deck.UpdatePlaying(input);
     HandleInput(input);
     waves.Update(dt, enemies, pathPoints);
@@ -242,7 +242,7 @@ void Game::Update(float dt, const InputState& input) {
     CheckEnemyReachedBase();
     CleanupDead();
 
-    // ── Hero Ultimate: one-frame massive damage ──────────
+    // ── Ultimate Hero: damage besar satu frame ──────────
     if (hero.isUltFiring) {
         for (auto& e : enemies) {
             if (!e.alive) continue;
@@ -250,16 +250,16 @@ void Game::Update(float dt, const InputState& input) {
             if (e.hp <= 0) {
                 e.alive = false;
                 currency += e.reward;
-                // Ult kills do NOT grant charge (prevent infinite loop)
+                // Kill dari ult TIDAK memberi charge (cegah loop tak henti)
             }
         }
-        hero.isUltFiring = false; // damage only on first frame
+        hero.isUltFiring = false; // damage hanya di frame pertama
     }
 
-    // ── Screen shake timer ───────────────────────────────
+    // ── Timer screen shake ───────────────────────────────
     if (screenShakeTimer > 0) {
         screenShakeTimer -= dt;
-        float intensity = screenShakeTimer * 20.0f; // decays from 10 to 0
+        float intensity = screenShakeTimer * 20.0f; // meluruh dari 10 ke 0
         if (intensity > 10.0f) intensity = 10.0f;
         camera.offset.x = (float)((rand() % 200 - 100) / 100.0f) * intensity;
         camera.offset.y = (float)((rand() % 200 - 100) / 100.0f) * intensity;
@@ -268,7 +268,7 @@ void Game::Update(float dt, const InputState& input) {
         camera.offset.y = 0;
     }
 
-    // ── Wave-end shop check ──────────────────────────────
+    // ── Cek shop akhir wave ──────────────────────────────
     CheckWaveEndShop();
 
     if (waves.AllWavesComplete() && waves.IsWaveCleared(enemies))
@@ -311,20 +311,20 @@ void Game::UpdateShop(const InputState& in) {
 // ─── Input (PLAYING) ────────────────────────────────────
 
 void Game::HandleInput(const InputState& in) {
-    // Start next wave: SPACE OR right-hand peace-sign gesture
+    // Mulai wave berikutnya: SPACE ATAU gestur peace-sign tangan kanan
     if ((in.startWavePressed || IsKeyPressed(KEY_SPACE))
         && !waves.waveActive && waves.currentWave < (int)waves.waves.size()-1)
         waves.StartNextWave();
 
-    // Hero Ultimate: Q key OR right-hand closed fist
+    // Ultimate Hero: tombol Q ATAU kepalan tangan kanan
     if ((in.ultPressed || IsKeyPressed(KEY_Q)) && hero.IsUltReady()) {
         hero.FireUltimate();
-        screenShakeTimer = 0.5f; // trigger screen shake
+        screenShakeTimer = 0.5f; // picu screen shake
     }
 
     const Vector2 mp = in.cursor;
 
-    // Place tower
+    // Pasang tower
     if (in.clickPressed && deck.HasSelection()) {
         bool clickedCard = false;
         for (int i = 0; i < (int)deck.hand.size(); i++)
@@ -346,7 +346,7 @@ void Game::HandleInput(const InputState& in) {
         }
     }
 
-    // Sell tower (or deselect): hardware right-click OR left-hand open-palm gesture
+    // Jual tower (atau batal pilih): klik-kanan hardware ATAU gestur telapak terbuka tangan kiri
     if (in.sellPressed || in.rightClickPressed) {
         bool handled = false;
 
@@ -360,7 +360,7 @@ void Game::HandleInput(const InputState& in) {
         if (!handled) deck.DeselectAll();
     }
 
-    // Upgrade top tower at hovered grid cell: U key OR left-hand index-pointing gesture
+    // Upgrade tower teratas di sel grid yang di-hover: tombol U ATAU gestur telunjuk tangan kiri
     if (in.upgradePressed || IsKeyPressed(KEY_U)) {
         if (mp.y < UI_PANEL_Y) {
             int col = (int)(mp.x/CELL_SIZE), row = (int)(mp.y/CELL_SIZE);
@@ -378,7 +378,7 @@ void Game::UpdateProjectiles(float dt) {
             if (p.CheckCollision(e)) {
                 if (!e.alive) {
                     currency += e.reward;
-                    // Grant ult charge based on enemy type
+                    // Beri charge ult berdasarkan tipe musuh
                     switch (e.type) {
                         case EnemyType::GRUNT: hero.AddUltCharge(2);  break;
                         case EnemyType::FAST:  hero.AddUltCharge(3);  break;
@@ -407,23 +407,23 @@ void Game::CleanupDead() {
     projectiles.erase(std::remove_if(projectiles.begin(),projectiles.end(),[](const Projectile& p){return !p.active;}),projectiles.end());
 }
 
-// ─── Ultimate Laser Visual ──────────────────────────────
+// ─── Visual Laser Ultimate ──────────────────────────────
 
 void Game::DrawUltLaser() const {
     if (hero.ultActiveTimer <= 0) return;
 
-    float alpha = hero.ultActiveTimer / hero.ultDuration; // fades out over duration
+    float alpha = hero.ultActiveTimer / hero.ultDuration; // memudar sepanjang durasi
 
-    // ── Try sprite-based lightning ────────────────────────
+    // ── Coba lightning berbasis sprite ────────────────────
     Texture2D* ltex = const_cast<AssetManager*>(&assets)->Get("ult_lightning");
     if (ltex && ltex->id > 0) {
-        int frameSize = 64; // each frame is 64x64 in the sprite strip
+        int frameSize = 64; // tiap frame 64x64 di sprite strip
         Rectangle src = {
             (float)(hero.currentUltFrame * frameSize), 0,
             (float)frameSize, (float)frameSize
         };
 
-        // Draw lightning beam along each path segment
+        // Gambar beam lightning di tiap segmen jalur
         for (int i = 0; i < (int)pathPoints.size()-1; i++) {
             Vector2 a = pathPoints[i];
             Vector2 b = pathPoints[i+1];
@@ -431,18 +431,18 @@ void Game::DrawUltLaser() const {
             float segLen = sqrtf(dx*dx + dy*dy);
             float angle = atan2f(dy, dx) * RAD2DEG;
 
-            // Stretch the 64px sprite to cover the full segment length
-            // Width = segment length, Height = beam thickness (64px)
+            // Regangkan sprite 64px agar menutupi panjang penuh segmen
+            // Lebar = panjang segmen, Tinggi = ketebalan beam (64px)
             Rectangle dst = {
                 a.x, a.y,
                 segLen, (float)frameSize
             };
-            // Origin at left-center so the beam starts at point A
+            // Origin di kiri-tengah agar beam mulai di titik A
             Vector2 origin = { 0, frameSize / 2.0f };
 
             DrawTexturePro(*ltex, src, dst, origin, angle, Fade(WHITE, alpha));
 
-            // Extra glow layer (slightly larger, more transparent)
+            // Layer glow tambahan (sedikit lebih besar, lebih transparan)
             Rectangle dstGlow = {
                 a.x, a.y,
                 segLen, (float)(frameSize + 16)
@@ -452,7 +452,7 @@ void Game::DrawUltLaser() const {
                            Fade(COLOR_CURRENCY, 0.25f * alpha));
         }
 
-        // Bright nodes at each waypoint
+        // Node terang di tiap waypoint
         float t = (float)GetTime();
         for (auto& pt : pathPoints) {
             float r = 10.0f + 4.0f * sinf(t * 12.0f);
@@ -461,7 +461,7 @@ void Game::DrawUltLaser() const {
         return;
     }
 
-    // ── Procedural fallback ───────────────────────────────
+    // ── Fallback prosedural ───────────────────────────────
     float t = (float)GetTime();
     for (int i = 0; i < (int)pathPoints.size()-1; i++) {
         DrawLineEx(pathPoints[i], pathPoints[i+1], 8.0f, Fade(WHITE, 0.9f * alpha));
@@ -494,10 +494,10 @@ void Game::Draw() const {
 
     if (state == GameState::DRAFTING) { DrawDrafting(); DrawCrosshair(); return; }
 
-    // ── Begin Camera2D (everything that shakes) ──────────
+    // ── Mulai Camera2D (semua yang bergetar) ──────────
     BeginMode2D(camera);
 
-    // ── Animated Map Background ─────────────────────────
+    // ── Background Map Beranimasi ─────────────────────────
     Texture2D* mapTex = const_cast<AssetManager*>(&assets)->Get("map_bg");
     if (mapTex && mapTex->id > 0) {
         Rectangle srcMap = { (float)(currentMapFrame * MAP_FRAME_W), 0.0f,
@@ -505,7 +505,7 @@ void Game::Draw() const {
         Rectangle dstMap = { 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() };
         DrawTexturePro(*mapTex, srcMap, dstMap, {0,0}, 0.0f, WHITE);
     } else {
-        // Procedural fallback (stars)
+        // Fallback prosedural (bintang)
         for (int i = 0; i < 80; i++) {
             int sx=(i*137+31)%SCREEN_WIDTH, sy=(i*211+47)%GRID_HEIGHT;
             DrawPixel(sx, sy, Fade(WHITE, 0.2f+0.15f*sinf((float)GetTime()*0.5f+i*0.7f)));
@@ -514,12 +514,12 @@ void Game::Draw() const {
 
     DrawPath(); DrawGrid(); DrawPortal();
 
-    // Hero replaces old DrawBase()
+    // Hero menggantikan DrawBase() lama
     hero.Draw(const_cast<AssetManager*>(&assets));
 
     for (int r=0;r<GRID_ROWS;r++) for(int c=0;c<GRID_COLS;c++) grid[r][c].DrawAll();
 
-    // Cell highlights
+    // Highlight sel
     if (deck.HasSelection()) {
         Card* card = const_cast<Game*>(this)->deck.GetSelectedCard();
         if (card) {
@@ -539,10 +539,10 @@ void Game::Draw() const {
     for (auto& e : enemies) e.Draw(const_cast<AssetManager*>(&assets));
     for (auto& p : projectiles) p.Draw(const_cast<AssetManager*>(&assets));
 
-    // Ultimate laser drawn on top of path/enemies
+    // Laser ultimate digambar di atas jalur/musuh
     DrawUltLaser();
 
-    // ── Hover Tooltip ────────────────────────────────────
+    // ── Tooltip Hover ────────────────────────────────────
     {
         Vector2 mp = lastInput.cursor;
         if (mp.y < UI_PANEL_Y && mp.y >= 0) {
@@ -583,14 +583,14 @@ void Game::Draw() const {
     }
 
     EndMode2D();
-    // ── End Camera2D ─────────────────────────────────────
+    // ── Akhir Camera2D ─────────────────────────────────────
 
-    // UI is drawn OUTSIDE Camera2D so it stays static during shake
+    // UI digambar DI LUAR Camera2D agar tetap statis saat shake
     DrawRectangle(0, UI_PANEL_Y, SCREEN_WIDTH, UI_PANEL_HEIGHT, COLOR_UI_PANEL);
     DrawLineEx({0,(float)UI_PANEL_Y},{(float)SCREEN_WIDTH,(float)UI_PANEL_Y}, 2, COLOR_UI_BORDER);
     DrawUI();
 
-    // Shop overlay (drawn on top of everything)
+    // Overlay shop (digambar di atas segalanya)
     if (state == GameState::SHOP) DrawShop();
 
     if (state == GameState::GAME_OVER) DrawGameOver();
@@ -600,7 +600,7 @@ void Game::Draw() const {
 }
 
 void Game::DrawCrosshair() const {
-    if (crosshairAlpha_ <= 0.01f) return;   // hand out of frame — fully hidden
+    if (crosshairAlpha_ <= 0.01f) return;   // tangan keluar frame — disembunyikan penuh
     Vector2 c = lastInput.cursor;
     Color col = Fade(lastInput.udpAlive ? GREEN : RED, crosshairAlpha_);
     int cx = (int)c.x, cy = (int)c.y;
@@ -648,13 +648,13 @@ void Game::DrawUI() const {
     deck.DrawPlaying(const_cast<AssetManager*>(&assets));
     waves.Draw();
 
-    // ── Music Player UI ──────────────────────────────────
+    // ── UI Pemutar Musik ──────────────────────────────────
     DrawRectangleRec(skipBtn, CLITERAL(Color){30,30,30,255});
     DrawRectangleLinesEx(skipBtn, 1, COLOR_CURRENCY);
     DrawText("[ >> ]", skipBtn.x + 12, skipBtn.y + 8, 14, COLOR_CURRENCY);
     DrawText(TextFormat("Track: %d", currentTrackIndex + 1), skipBtn.x - 100, skipBtn.y + 5, 20, RAYWHITE);
 
-    // Ult charge in UI (kill-based)
+    // Charge ult di UI (berbasis kill)
     if (hero.IsUltReady()) {
         float pulse = 0.6f + 0.4f * sinf((float)GetTime()*3.0f);
         DrawText("[Q] ULTIMATE READY", SCREEN_WIDTH-250, UI_PANEL_Y+75, 14,

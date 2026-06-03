@@ -12,7 +12,7 @@ Enemy::Enemy(EnemyType t, Vector2 spawn, float hpMult)
     speed = s.speed;     reward = s.reward;
     radius = s.radius;
 
-    // Tank has 6 frames; all others have 4
+    // Tank punya 6 frame; lainnya 4
     maxFrames = (t == EnemyType::TANK) ? 6 : 4;
 }
 
@@ -20,7 +20,7 @@ void Enemy::Update(float dt, const std::vector<Vector2>& path) {
     if (!alive || pathIndex >= (int)path.size()) return;
     if (slowTimer > 0) { slowTimer -= dt; if (slowTimer <= 0) slowFactor = 1.0f; }
 
-    // ── Animation tick ───────────────────────────────────
+    // ── Tick animasi ───────────────────────────────────
     animTimer += dt;
     if (animTimer >= frameTime) {
         animTimer = 0.0f;
@@ -40,7 +40,7 @@ void Enemy::Update(float dt, const std::vector<Vector2>& path) {
 void Enemy::Draw(AssetManager* assets) const {
     if (!alive) return;
 
-    // ── Determine texture key ────────────────────────────
+    // ── Tentukan key tekstur ────────────────────────────
     const char* texKey = "enemy_grunt";
     switch (type) {
         case EnemyType::GRUNT: texKey = "enemy_grunt"; break;
@@ -52,7 +52,7 @@ void Enemy::Draw(AssetManager* assets) const {
     Texture2D* tex = assets ? assets->Get(texKey) : nullptr;
 
     if (tex && tex->id > 0) {
-        // ── Sprite sheet frame math ──────────────────────
+        // ── Hitung frame sprite sheet ──────────────────────
         float frameWidth  = (float)tex->width / maxFrames;
         float frameHeight = (float)tex->height;
 
@@ -61,7 +61,7 @@ void Enemy::Draw(AssetManager* assets) const {
             frameWidth, frameHeight
         };
 
-        // Scale sprite to roughly match the enemy's radius
+        // Skalakan sprite agar kira-kira sesuai radius musuh
         float drawSize = radius * 4.0f;
         Rectangle destRec = {
             position.x, position.y,
@@ -71,12 +71,12 @@ void Enemy::Draw(AssetManager* assets) const {
 
         DrawTexturePro(*tex, sourceRec, destRec, origin, 0.0f, WHITE);
     } else {
-        // ── Procedural fallback (keeps game playable without sprites) ──
+        // ── Fallback prosedural (game tetap bisa dimainkan tanpa sprite) ──
         Color col = GetEnemyColor(type);
         DrawCircleV(position, radius, col);
     }
 
-    // ── HP bar (always drawn) ────────────────────────────
+    // ── Bar HP (selalu digambar) ────────────────────────────
     if (hp < maxHp) {
         float bw = radius*2.5f, bx = position.x-bw/2, by = position.y-radius-8;
         float r = hp/maxHp;
@@ -85,7 +85,7 @@ void Enemy::Draw(AssetManager* assets) const {
         DrawRectangle((int)bx,(int)by,(int)(bw*r),3, hc);
     }
 
-    // ── Slow effect overlay ──────────────────────────────
+    // ── Overlay efek slow ──────────────────────────────
     if (slowTimer > 0) DrawCircleV(position, radius+2, Fade(COLOR_FREEZE, 0.3f));
 }
 

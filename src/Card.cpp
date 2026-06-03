@@ -7,8 +7,8 @@
 Card::Card() : def({0, TowerType::LASER, 1}), selected(false), draftSelected(false) {}
 Card::Card(CardDef d) : def(d), selected(false), draftSelected(false) {}
 
-// ── Build the AssetManager key for a card texture ────────
-// Maps TowerType + baseTier → "card_laser_t1", "card_missile_t3", etc.
+// ── Bangun key AssetManager untuk tekstur kartu ────────
+// Memetakan TowerType + baseTier → "card_laser_t1", "card_missile_t3", dst.
 static std::string GetCardTextureKey(TowerType type, int tier) {
     const char* prefix = "card_";
     const char* typeName = "";
@@ -24,7 +24,7 @@ static std::string GetCardTextureKey(TowerType type, int tier) {
     return std::string(buf);
 }
 
-// ── Procedural icon fallback (only used when texture missing) ─
+// ── Fallback ikon prosedural (hanya saat tekstur tak ada) ─
 static void DrawTowerIcon(float cx, float cy, TowerType type, float scale, Color tc) {
     switch (type) {
     case TowerType::LASER:
@@ -42,7 +42,7 @@ static void DrawTowerIcon(float cx, float cy, TowerType type, float scale, Color
 }
 
 void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
-    // ── Try sprite card first ────────────────────────────
+    // ── Coba kartu sprite dulu ────────────────────────────
     if (assets) {
         std::string key = GetCardTextureKey(def.towerType, def.baseTier);
         Texture2D* tex = assets->Get(key);
@@ -50,7 +50,7 @@ void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
             Rectangle src = { 0, 0, (float)tex->width, (float)tex->height };
             DrawTexturePro(*tex, src, r, {0,0}, 0.0f, WHITE);
 
-            // Selection highlight
+            // Highlight pilihan
             if (selected) {
                 DrawRectangleLinesEx({r.x-2, r.y-2, r.width+4, r.height+4}, 3, COLOR_CARD_SEL);
             }
@@ -58,7 +58,7 @@ void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
         }
     }
 
-    // ── Procedural fallback ──────────────────────────────
+    // ── Fallback prosedural ──────────────────────────────
     Color tierCol = GetTierAccent(def.baseTier);
     Color border = selected ? COLOR_CARD_SEL : tierCol;
     float thick = selected ? 3.0f : 1.5f;
@@ -75,7 +75,7 @@ void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
 
     DrawText(GetCardName(def.towerType, def.baseTier), (int)(r.x+8), (int)(r.y+58), 11, COLOR_TEXT_MAIN);
 
-    // Tier pips
+    // Pip tier
     for (int i = 0; i < MAX_TIER; i++) {
         float sx = r.x+12+i*16, sy = r.y+78;
         if (i < def.baseTier) {
@@ -92,7 +92,7 @@ void Card::DrawInHand(Rectangle r, AssetManager* assets) const {
 }
 
 void Card::DrawInDraft(Rectangle r, AssetManager* assets) const {
-    // ── Try sprite card first ────────────────────────────
+    // ── Coba kartu sprite dulu ────────────────────────────
     if (assets) {
         std::string key = GetCardTextureKey(def.towerType, def.baseTier);
         Texture2D* tex = assets->Get(key);
@@ -100,7 +100,7 @@ void Card::DrawInDraft(Rectangle r, AssetManager* assets) const {
             Rectangle src = { 0, 0, (float)tex->width, (float)tex->height };
             DrawTexturePro(*tex, src, r, {0,0}, 0.0f, WHITE);
 
-            // Selection highlight
+            // Highlight pilihan
             if (draftSelected) {
                 DrawRectangleLinesEx({r.x-3, r.y-3, r.width+6, r.height+6}, 2, Fade(COLOR_CARD_SEL,0.5f));
                 DrawText("PICKED", (int)(r.x+r.width-55), (int)(r.y+8), 10, COLOR_CARD_SEL);
@@ -109,7 +109,7 @@ void Card::DrawInDraft(Rectangle r, AssetManager* assets) const {
         }
     }
 
-    // ── Procedural fallback ──────────────────────────────
+    // ── Fallback prosedural ──────────────────────────────
     Color tierCol = GetTierAccent(def.baseTier);
     Color border = draftSelected ? COLOR_CARD_SEL : tierCol;
     float thick = draftSelected ? 3.0f : 1.5f;
@@ -129,16 +129,16 @@ void Card::DrawInDraft(Rectangle r, AssetManager* assets) const {
 
     DrawText(GetCardName(def.towerType, def.baseTier), (int)(r.x+10), (int)(r.y+72), 12, COLOR_TEXT_MAIN);
 
-    // Tier label
+    // Label tier
     char tierBuf[8]; snprintf(tierBuf, sizeof(tierBuf), "T%d", def.baseTier);
     DrawText(tierBuf, (int)(r.x+10), (int)(r.y+90), 14, tierCol);
 
-    // Cost
+    // Biaya
     TowerStats s = GetTierStats(def.towerType, def.baseTier);
     char costBuf[16]; snprintf(costBuf, sizeof(costBuf), "$%d", s.cost);
     DrawText(costBuf, (int)(r.x+10), (int)(r.y+110), 14, COLOR_CURRENCY);
 
-    // Stats preview
+    // Pratinjau stats
     char dmgBuf[16]; snprintf(dmgBuf, sizeof(dmgBuf), "DMG:%.0f", s.damage);
     DrawText(dmgBuf, (int)(r.x+10), (int)(r.y+130), 10, COLOR_TEXT_DIM);
     char rngBuf[16]; snprintf(rngBuf, sizeof(rngBuf), "RNG:%.0f", s.range);
